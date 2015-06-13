@@ -1,17 +1,25 @@
+{-# LANGUAGE OverloadedStrings #-}
 
 import Data.Time (UTCTime, getCurrentTime)
 import Control.Monad.State.Class (MonadState)
 import Control.Applicative ((<$>), (<*>))
 import System.Console.Haskeline
 import Options.Applicative
+import Data.Conduit
+import Control.Monad.Trans.Resource (runResourceT)
+import qualified Data.ByteString as BS
+import qualified Data.Text as T
+import qualified Data.Conduit.Text as CT
+import qualified Data.Conduit.Binary as B
+import qualified Data.Conduit.List as CL
 
-data Log = Log Tag Message UTCTime deriving (Show)
+data Log = Log Tag Message UTCTime deriving (Show, Read)
 type Tag = String
 type Message = String
 
 data Action = AddLog Tag Message
-            | List Integer
-            deriving (Show)
+            | List Int
+            deriving (Show, Read)
 
 main :: IO ()
 main = execParser opts >>= process
@@ -25,10 +33,18 @@ main = execParser opts >>= process
 process :: Action -> IO ()
 process (AddLog tag msg) = do
   log <- (Log tag msg) <$> getCurrentTime
-  putStrLn ("logged " <> show log)
+  appendFile "db.txt" $ ((show log) <> "\n")
 
 process (List n) = do
-  putStrLn "showing n last"
+  logs <- runResourceT $  B.sourceFile "db.txt" $$
+                          B.lines =$=
+                          CT.decode CT.utf8 =$=
+                          CL.map (\x -> (read $ T.unpack x) :: Log) =$
+                          CL.consume
+  mapM_ (putStrLn . show) (lastN n logs)
+
+lastN :: Int -> [a] -> [a]
+lastN n = reverse . take n . reverse
 
 --mkLog :: Tag -> Message -> IO Log
 --mkLog tag msg = (Log tag msg) <$> getCurrentTime
