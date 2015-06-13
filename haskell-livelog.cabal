@@ -22,7 +22,8 @@ executable haskell-livelog
   build-depends:       base >=4.7 && <4.8
                       ,haskeline
                       ,mtl
-                      ,time
+                      ,time >= 1.5.0.1 && < 1.6
+                      ,old-locale
                       ,optparse-applicative
                       ,conduit
                       ,conduit-extra

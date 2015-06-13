@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Data.Time (UTCTime, getCurrentTime)
+import Data.Time (UTCTime, getCurrentTime, diffUTCTime)
+import Data.Time (utcToLocalTime, getCurrentTimeZone, TimeZone)
+import Data.Time.Format (formatTime, defaultTimeLocale)
 import Control.Monad.State.Class (MonadState)
 import Control.Applicative ((<$>), (<*>))
 import System.Console.Haskeline
@@ -41,7 +43,21 @@ process (List n) = do
                           CT.decode CT.utf8 =$=
                           CL.map (\x -> (read $ T.unpack x) :: Log) =$
                           CL.consume
-  mapM_ (putStrLn . show) (lastN n logs)
+  mapM_ (printPrettyLog) (lastN n logs)
+
+printPrettyLog :: Log -> IO ()
+printPrettyLog log = do
+  curTime <- getCurrentTime
+  timezone <- getCurrentTimeZone
+  putStrLn (prettyLog timezone curTime log)
+
+prettyLog :: TimeZone -> UTCTime -> Log -> String
+prettyLog timezone endTime (Log tag msg time) =
+  prettyTime <> " - " <> duration <> "\n  tag: " <> tag <> "\n  " <> msg
+  where prettyTime = fmtTime (utcToLocalTime timezone time)
+        duration = (show $ durationSecs / 60) <> " minutes"
+        durationSecs = (diffUTCTime endTime time)
+        fmtTime = formatTime defaultTimeLocale "%a %Y/%m/%e %H:%M:%S"
 
 lastN :: Int -> [a] -> [a]
 lastN n = reverse . take n . reverse
