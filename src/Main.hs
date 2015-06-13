@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Data.Time (UTCTime, getCurrentTime, diffUTCTime)
-import Data.Time (utcToLocalTime, getCurrentTimeZone, TimeZone)
+import Data.Time (utcToLocalTime, getCurrentTimeZone, TimeZone, NominalDiffTime)
 import Data.Time.Format (formatTime, defaultTimeLocale)
 import Control.Monad.State.Class (MonadState)
 import Control.Applicative ((<$>), (<*>))
@@ -43,20 +43,26 @@ process (List n) = do
                           CT.decode CT.utf8 =$=
                           CL.map (\x -> (read $ T.unpack x) :: Log) =$
                           CL.consume
-  mapM_ (printPrettyLog) (lastN n logs)
-
-printPrettyLog :: Log -> IO ()
-printPrettyLog log = do
   curTime <- getCurrentTime
-  timezone <- getCurrentTimeZone
-  putStrLn (prettyLog timezone curTime log)
+  mapM_ (printPrettyLog) (withDuration curTime $ lastN n logs)
 
-prettyLog :: TimeZone -> UTCTime -> Log -> String
-prettyLog timezone endTime (Log tag msg time) =
+withDuration :: UTCTime -> [Log] -> [(Log, NominalDiffTime)]
+withDuration endTime logs =
+  zip logs durations
+  where durations = zipWith diffUTCTime ((tail times) ++ [endTime]) times
+        times = map (\(Log _ _ time) -> time) logs
+
+printPrettyLog :: (Log, NominalDiffTime) -> IO ()
+printPrettyLog logAndDiff = do
+  timezone <- getCurrentTimeZone
+  putStrLn (prettyLog timezone logAndDiff)
+
+prettyLog :: TimeZone -> (Log, NominalDiffTime) -> String
+prettyLog timezone ((Log tag msg time), diff) =
   prettyTime <> " - " <> duration <> "\n  tag: " <> tag <> "\n  " <> msg
   where prettyTime = fmtTime (utcToLocalTime timezone time)
         duration = (show $ durationSecs / 60) <> " minutes"
-        durationSecs = (diffUTCTime endTime time)
+        durationSecs = diff
         fmtTime = formatTime defaultTimeLocale "%a %Y/%m/%e %H:%M:%S"
 
 lastN :: Int -> [a] -> [a]
