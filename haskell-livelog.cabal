@@ -19,8 +19,9 @@ executable haskell-livelog
   main-is:             Main.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.7 && <4.8
+  build-depends:       base >=4.8 && <4.9
                       ,haskeline
+                      ,transformers
                       ,mtl
                       ,time >= 1.5.0.1 && < 1.6
                       ,old-locale
@@ -30,5 +31,10 @@ executable haskell-livelog
                       ,resourcet
                       ,bytestring
                       ,text
+                      ,persistent
+                      ,persistent-template
+                      ,persistent-mysql
+                      ,esqueleto
+                      ,monad-logger
   hs-source-dirs:      src
   default-language:    Haskell2010
