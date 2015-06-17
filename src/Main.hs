@@ -128,12 +128,9 @@ withDB f = withMySQLPool connInfo 10 $ \pool -> do
 --   return ()
 --   f
 
-test :: IO ()
-test = runStdoutLoggingT . withDB $ \pool -> do
+test f = runStdoutLoggingT . withDB $ \pool -> do
   time <- liftIO getCurrentTime
-  logs <- flip runSqlPool pool $ getLogs 10
-  liftIO $ putStrLn . show $ logs
-  return ()
+  flip runSqlPool pool $ f time
 
 -- get last n logs
 getLogs n = 
@@ -142,12 +139,22 @@ getLogs n =
   limit n
   return $ log
 
+-- get log
+-- getLog id = get $ Key (PersistInt64 $ fromIntegral id)
+
 -- create log
 createLog msg tagName time = do
   logId <- insert $ Log msg time
   tagLog logId tagName
 
 -- edit log msg
+
+-- get tags
+getTags n =
+  select $ from $ \tag -> do
+  orderBy [asc (tag ^. TagId)]
+  limit n
+  return $ tag
 
 -- get tag
 getTag tagName = do
@@ -167,6 +174,10 @@ createTag tagName = do
     Just v  -> return $ entityKey v
 
 -- edit tag name
+editTag tagId tagName = do
+  update $ \tag -> do
+    set tag [TagName =. val tagName]
+    where_ (tag ^. TagId ==. val tagId)
 
 -- add log tagging
 tagLog logId tagName = do
@@ -174,3 +185,9 @@ tagLog logId tagName = do
   insert $ TagLog tagId logId
 
 -- rem log tagging
+untagLog logId tagName = do
+  maybeTag <- getTag tagName
+  case maybeTag of
+    Nothing -> return ()
+    Just v  -> delete $ from $ \tagging -> do
+                where_ (tagging ^. TagLogTagId ==. val (entityKey v) &&. tagging ^. TagLogLogId ==. val logId)
