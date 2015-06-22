@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
@@ -27,18 +28,9 @@ import Network.Wai.Session.ClientSession (clientsessionStore)
 import Data.Serialize (encode, decode)
 
 import Model
-
-data Config = Config
-  { pool :: ConnectionPool
-  , vaultKey :: Vault.Key (Session IO ByteString ByteString)
-  }
-
-newtype ConfigM a = ConfigM
-  { runConfigM :: ReaderT Config IO a
-  } deriving (Applicative, Functor, Monad, MonadIO, MonadReader Config)
-
-type AppM = ScottyT Text ConfigM
-type ActM = ActionT Text ConfigM
+import Types
+import Controllers.Common
+import qualified Controllers.Logs as CLogs
 
 application :: [Middleware] -> AppM ()
 application mws = do
@@ -48,12 +40,9 @@ application mws = do
   -- routes
   sessionRoutes
   userRoutes
-  logRoutes
+  CLogs.routes
   tagRoutes
   notFound notFoundA
-
-notFoundA = do
-  status status404
 
 main :: IO ()
 main = do 
@@ -74,35 +63,9 @@ getConfig = do
   p   <- runStdoutLoggingT $ createMySQLPool connInfo 10
   vk  <- Vault.newKey
   return $ Config { pool = p, vaultKey = vk }
-  where connInfo = defaultConnectInfo { connectDatabase = "livelog", connectPassword = "" }
+  where connInfo = defaultConnectInfo { connectDatabase = "livelog", connectPassword = "root" }
 
-withDB q = do
-  p <- lift $ asks pool
-  liftIO $ runSqlPool q p
-
----
-
-getSession = do
-  vk <- lift $ asks vaultKey
-  req <- request
-  return $ Vault.lookup vk (vault req)
-
-requireUser :: ActM (Maybe UserId)
-requireUser = do
-  Just (sessionLookup, _) <- getSession
-  maybeUId <- liftIO $ sessionLookup "u"
-  case maybeUId of 
-    Nothing -> raise "Unknown"
-    Just v -> case decode v of
-      Left _ -> raise "Format error"
-      Right decoded -> do
-        let k = toSqlKey decoded
-        mUser <- withDB $ DB.get (k :: UserId)
-        liftIO $ putStrLn $ "you are " ++ (show mUser)
-        case mUser of
-          Nothing -> raise "Unknown user"
-          Just user  -> do
-            return $ Just k
+--
 
 sessionRoutes :: AppM ()
 sessionRoutes = do
@@ -111,19 +74,17 @@ sessionRoutes = do
   where
     _save = do
       d <- jsonData
-      vk <- lift $ asks vaultKey
-      req <- request
-      let Just (_, sessionInsert) = Vault.lookup vk (vault req)
       user <- withDB $ DB.getByValue (d :: User)
       case user of
         Nothing -> 
           notFoundA
         Just v -> do
+          (_, sessionInsert) <- getSession
           liftIO $ sessionInsert "u" $ encode . fromSqlKey . DB.entityKey $ v 
           status status201
 
     _delete = do
-      Just (_, sessionInsert) <- getSession
+      (_, sessionInsert) <- getSession
       liftIO $ sessionInsert "u" ""
 
 
@@ -133,30 +94,7 @@ userRoutes = do
   where
     _save = do
       b <- jsonData
-      l <- withDB $ createUser (b :: User)
-      status status201
-      json l
-
-logRoutes :: AppM ()
-logRoutes = do
-  get "/logs"     $ requireUser >>= _query
-  post "/logs"    _save
-  get "/logs/:id" _get
-  where
-    _query user = do
-      logs <- withDB (getLogs 10)
-      json logs
-
-    _get = do
-      i   <- param "id"
-      log <- withDB $ getLog . fromIntegral $ (i :: Int)
-      case log of
-        Nothing -> notFoundA
-        Just v  -> json v
-
-    _save = do
-      b <- jsonData
-      l <- withDB $ createLog (b :: Log)
+      l <- withDB $ DB.insert (b :: User)
       status status201
       json l
 
@@ -167,7 +105,7 @@ tagRoutes = do
   get   "/tags/:id" _get
   where
     _query = do
-      tags <- withDB (getTags 10)
+      (tags :: [DB.Entity Tag]) <- withDB $ DB.selectList [] []
       json tags
 
     _get = do
@@ -177,7 +115,7 @@ tagRoutes = do
 
     _save = do
       b <- jsonData
-      l <- withDB $ createLog (b :: Tag)
+      l <- withDB $ DB.insert (b :: Tag)
       status status201
       json l
 
