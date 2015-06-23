@@ -12,6 +12,7 @@ import qualified Data.Vault.Lazy as Vault
 import Network.Wai (vault)
 import Data.Serialize (decode)
 import Network.HTTP.Types (status404)
+import Data.Text.Lazy (Text)
 
 import Model
 import Types
@@ -19,6 +20,13 @@ import Types
 withDB q = do
   p <- lift $ asks pool
   liftIO $ runSqlPool q p
+
+maybeParam :: (Parsable a) => Text -> [Param] -> Maybe a
+maybeParam id params = do
+  p <- lookup id params
+  case parseParam p of
+    Left _ -> Nothing
+    Right v -> Just v
 
 notFoundA :: ActM ()
 notFoundA = do

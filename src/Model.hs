@@ -11,6 +11,7 @@
 
 module Model where
 
+import Data.Text (Text)
 import Control.Applicative ((<$>))
 import Data.Monoid ((<>))
 import Data.Time (UTCTime)
@@ -19,6 +20,7 @@ import Database.Esqueleto
 import Database.Persist.TH
 import Database.Persist.MySQL (ConnectionPool, createMySQLPool, defaultConnectInfo, ConnectInfo(..))
 import Database.Persist.Sql (runSqlPool)
+import GHC.Int (Int64)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User json
@@ -55,18 +57,34 @@ toKey x = toSqlKey . fromIntegral $ x
 getById x = get . toKey $ x
 
 data LogFilterParam = LogFilterParam
-  { lfpMessage :: Maybe Text
-  , lfpLimit :: Maybe Integer
-  , lfpSinceId :: Maybe Integer
+  { lfpMessage :: Maybe String
+  , lfpLimit :: Maybe Int64
+  , lfpSinceId :: Maybe (Key Log)
   }
-data LogSortParam = LogSortParam
-  { lspCreatedAt :: Maybe SortDirection
-  , lspMessage :: Maybe SortDirection
-  }
-data LogSaveParam :: LogSaveParam
-  { lspMessage :: Text
+type LogSortParam = [LogSortFieldParam]
+data LogSortFieldParam  = LogSortCreatedAt SortDirection
+                        | LogSortMessage SortDirection
+data LogSaveParam = LogSaveParam
+  { lspMessage :: String
   }
 data SortDirection = Asc | Desc
+
+logQuery :: (MonadIO m) => LogFilterParam -> LogSortParam -> SqlPersistT m [Entity Log]
+logQuery filterParam sortParam = 
+  select $ from $ \row -> do
+  where_ (msgCondition row &&. sinceCondition row)
+  limitCondition
+  orderBy orderCondition
+  return row
+  where
+    msgCondition row = case (lfpMessage filterParam) of
+      Nothing -> val True
+      Just msg -> ((row ^. LogMessage) `like` val msg)
+    sinceCondition row = case (lfpSinceId filterParam) of
+      Nothing -> val True
+      Just sinceId -> (row ^. LogId >=. val sinceId)
+    limitCondition = limit $ maybe 50 id (lfpLimit filterParam)
+    orderCondition = undefined
 
 -- LOGS
 

@@ -31,8 +31,16 @@ routes = do
   delete  "/logs/:id" $ requireUser >>= _delete
   where
     _query userId = do
-      (logs :: [DB.Entity Log]) <- withDB $ getFor LogUserId userId
+      ps <- params
+      logs <- withDB $ logQuery (filterParam ps) (sortParam ps)
       json logs
+      where filterParam ps = LogFilterParam { lfpMessage  = maybeParam "message" ps
+                                            , lfpLimit    = do  i <- maybeParam "limit" ps
+                                                                return $ fromIntegral (i :: Int)
+                                            , lfpSinceId  = do  i <- maybeParam "sinceId" ps
+                                                                return $ toKey (i :: Int)
+                                            }
+            sortParam ps = undefined
 
     _get _ = do
       i   <- param "id"
