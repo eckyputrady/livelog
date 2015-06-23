@@ -7,7 +7,7 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE FlexibleInstances               #-}
+{-# LANGUAGE FlexibleInstances          #-}
 
 module Model where
 
@@ -51,15 +51,35 @@ TagLog json
 migrateModels :: (MonadIO m) => SqlPersistT m ()
 migrateModels = runMigration migrateAll 
 
-getById x = get . toSqlKey . fromIntegral $ x
+toKey x = toSqlKey . fromIntegral $ x
+getById x = get . toKey $ x
+
+data LogFilterParam = LogFilterParam
+  { lfpMessage :: Maybe Text
+  , lfpLimit :: Maybe Integer
+  , lfpSinceId :: Maybe Integer
+  }
+data LogSortParam = LogSortParam
+  { lspCreatedAt :: Maybe SortDirection
+  , lspMessage :: Maybe SortDirection
+  }
+data LogSaveParam :: LogSaveParam
+  { lspMessage :: Text
+  }
+data SortDirection = Asc | Desc
 
 -- LOGS
 
 -- getLogsFor :: Entity User -> SqlPersistT m [Entity Log]
-getLogsFor userId =
-  select $ from $ \log -> do
-  where_ (log ^. LogUserId ==. val userId)
-  return log
+-- getLogsFor userId =
+--   select $ from $ \log -> do
+--   where_ (log ^. LogUserId ==. val userId)
+--   return log
+
+getFor getterF itemId =
+  select $ from $ \item -> do
+  where_ (item ^. getterF ==. val itemId)
+  return item
 
 -- /// Users
 

@@ -18,24 +18,26 @@ import Types
 import Model
 import Controllers.Common
 
-data CParam = CParam { name :: String } deriving (Generic)
+data CParam = CParam { message :: String, time :: Maybe UTCTime } deriving (Generic)
 instance Aeson.ToJSON CParam
 instance Aeson.FromJSON CParam
 
 routes :: AppM ()
 routes = do
-  get   "/logs"     $ requireUser >>= _query
-  post  "/logs"     $ requireUser >>= _save
-  get   "/logs/:id" $ requireUser >>= _get
+  get     "/logs"     $ requireUser >>= _query
+  post    "/logs"     $ requireUser >>= _save
+  get     "/logs/:id" $ requireUser >>= _get
+  post    "/logs/:id" $ requireUser >>= _update
+  delete  "/logs/:id" $ requireUser >>= _delete
   where
-    _query user = do
-      (logs :: [DB.Entity Log]) <- withDB $ getLogsFor user
+    _query userId = do
+      (logs :: [DB.Entity Log]) <- withDB $ getFor LogUserId userId
       json logs
 
-    _get user = do
+    _get _ = do
       i   <- param "id"
       (log :: Maybe Log) <- withDB $ getById (i :: Int)
-      json log
+      maybe notFoundA json log
 
     _save userId = do
       d <- jsonData
@@ -44,7 +46,22 @@ routes = do
       status status201
       json l
 
+    _update userId = do
+      d <- jsonData
+      b <- liftIO $ toModel userId d
+      i <- param "id"
+      l <- withDB $ DB.replace (toKey (i :: Int)) (b :: Log)
+      json l
+
+    _delete userId = do
+      i <- param "id"
+      withDB $ DB.delete $ (toKey (i :: Int) :: DB.Key Log)
+      -- (ml :: Maybe Log) <- withDB $ getById (i :: Int)
+      -- case ml of
+      --   Nothing -> notFoundA
+      --   Just l -> withDB $ DB.delete (l ^. LogId)
+
 toModel :: UserId -> CParam -> IO Log
 toModel userId p = do
-  time <- getCurrentTime
-  return $ Log userId (name p) time
+  t <- maybe getCurrentTime return (time p)
+  return $ Log userId (message p) t

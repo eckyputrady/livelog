@@ -63,7 +63,7 @@ getConfig = do
   p   <- runStdoutLoggingT $ createMySQLPool connInfo 10
   vk  <- Vault.newKey
   return $ Config { pool = p, vaultKey = vk }
-  where connInfo = defaultConnectInfo { connectDatabase = "livelog", connectPassword = "root" }
+  where connInfo = defaultConnectInfo { connectDatabase = "livelog", connectPassword = "" }
 
 --
 
