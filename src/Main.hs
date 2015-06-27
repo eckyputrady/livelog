@@ -31,6 +31,8 @@ import Model
 import Types
 import Controllers.Common
 import qualified Controllers.Logs as CLogs
+import qualified Controllers.Tags as CTags
+import qualified Controllers.LogTag as CLogTag
 
 application :: [Middleware] -> AppM ()
 application mws = do
@@ -41,7 +43,8 @@ application mws = do
   sessionRoutes
   userRoutes
   CLogs.routes
-  tagRoutes
+  CTags.routes
+  CLogTag.routes
   notFound notFoundA
 
 main :: IO ()
@@ -97,26 +100,4 @@ userRoutes = do
       l <- withDB $ DB.insert (b :: User)
       status status201
       json l
-
-tagRoutes :: AppM ()
-tagRoutes = do
-  get   "/tags"     _query
-  post  "/tags"     _save
-  get   "/tags/:id" _get
-  where
-    _query = do
-      (tags :: [DB.Entity Tag]) <- withDB $ DB.selectList [] []
-      json tags
-
-    _get = do
-      i   <- param "id"
-      log <- withDB . DB.get . toSqlKey . fromIntegral $ (i :: Int)
-      json (log :: Maybe Log)
-
-    _save = do
-      b <- jsonData
-      l <- withDB $ DB.insert (b :: Tag)
-      status status201
-      json l
-
 

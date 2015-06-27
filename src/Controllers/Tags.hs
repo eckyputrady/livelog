@@ -27,29 +27,36 @@ routes = do
   get     "/tags"     $ requireUser >>= _query
   post    "/tags"     $ requireUser >>= _save
   get     "/tags/:id" $ requireUser >>= _get
-  update  "/tags/:id" $ requireUser >>= _update
+  post    "/tags/:id" $ requireUser >>= _update
+  delete  "/tags/:id" $ requireUser >>= _delete
   where
     _query userId = do
-      (items :: [DB.Entity Tag]) <- withDB $ getFor TagUserId user
+      (items :: [DB.Entity Tag]) <- withDB $ getFor TagUserId userId
       json items
 
     _get _ = do
       i   <- param "id"
-      (log :: Maybe Log) <- withDB $ getById (i :: Int)
+      (log :: Maybe Tag) <- withDB $ getById (i :: Int)
       json log
 
     _save userId = do
       d <- jsonData
       b <- liftIO $ toModel userId d
-      l <- withDB $ DB.insert (b :: Log)
+      l <- withDB $ DB.insert (b :: Tag)
       status status201
       json l
 
     _update userId = do
       d <- jsonData
-      withDB $ DB.
+      b <- liftIO $ toModel userId d
+      i <- param "id"
+      l <- withDB $ DB.replace (toKey (i :: Int)) (b :: Tag)
+      json l
 
-toModel :: UserId -> CParam -> IO Log
+    _delete userId = do
+      i <- param "id"
+      withDB $ DB.delete $ (toKey (i :: Int) :: DB.Key Tag)
+
+toModel :: UserId -> CParam -> IO Tag
 toModel userId p = do
-  time <- getCurrentTime
-  return $ Log userId (name p) time
+  return $ Tag userId (name p)

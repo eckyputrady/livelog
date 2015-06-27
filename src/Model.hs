@@ -12,6 +12,7 @@
 module Model where
 
 import Data.Text (Text)
+import Data.Maybe (listToMaybe)
 import Control.Applicative ((<$>))
 import Data.Monoid ((<>))
 import Data.Time (UTCTime)
@@ -89,6 +90,23 @@ logQuery filterParam sortParam =
     parseDir Asc = asc
     parseDir Desc = desc
 
+queryLogTags userId mLogId mTagId =
+  select $ from $ \(log `InnerJoin` taglog `InnerJoin` tag) -> do
+  on (tag ^. TagId ==. taglog ^. TagLogTagId)
+  on (log ^. LogId ==. taglog ^. TagLogLogId)
+  where_ (logIdCond taglog mLogId &&. tagIdCond taglog mTagId &&. userCond log tag)
+  return (log, taglog, tag)
+  where logIdCond _ Nothing       = val True
+        logIdCond taglog (Just v) = (taglog ^. TagLogLogId ==. val v)
+        tagIdCond _ Nothing       = val True
+        tagIdCond taglog (Just v) = (taglog ^. TagLogTagId ==. val v)
+        userCond log tag = log ^. LogUserId ==. val userId &&. tag ^. TagUserId ==. val userId
+
+delLogTags logId tagId =
+  delete $ from $ \taglog -> do
+  where_ (taglog ^. TagLogLogId ==. val logId &&. taglog ^. TagLogTagId ==. val tagId)
+
+
 -- LOGS
 
 -- getLogsFor :: Entity User -> SqlPersistT m [Entity Log]
@@ -101,6 +119,28 @@ getFor getterF itemId =
   select $ from $ \item -> do
   where_ (item ^. getterF ==. val itemId)
   return item
+
+getWithCond xs = 
+  select $ from $ \item -> do
+  where_ (foldr (&&.) (val True) $ map (parseCond item) xs)
+  return item
+  where 
+    parseCond item (getterF, getterVal) =
+      item ^. getterF ==. val getterVal
+
+getUserItem userF userId itemF itemId =
+  listToMaybe <$> results
+  where results = select $ from $ \item -> do
+                  where_ (item ^. itemF ==. val itemId &&. item ^. userF ==. val userId)
+                  limit 1
+                  return item
+
+delWithCond xs = 
+  delete $ from $ \item -> do
+  where_ (foldr (&&.) (val True) $ map (parseCond item) xs)
+  where 
+    parseCond item (getterF, getterVal) =
+      item ^. getterF ==. val getterVal
 
 -- /// Users
 

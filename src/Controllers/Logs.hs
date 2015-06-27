@@ -73,10 +73,6 @@ routes = do
     _delete userId = do
       i <- param "id"
       withDB $ DB.delete $ (toKey (i :: Int) :: DB.Key Log)
-      -- (ml :: Maybe Log) <- withDB $ getById (i :: Int)
-      -- case ml of
-      --   Nothing -> notFoundA
-      --   Just l -> withDB $ DB.delete (l ^. LogId)
 
 toModel :: UserId -> CParam -> IO Log
 toModel userId p = do
