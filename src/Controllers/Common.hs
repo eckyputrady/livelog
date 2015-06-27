@@ -44,7 +44,7 @@ requireUser = do
   (sessionLookup, _) <- getSession
   maybeUId <- liftIO $ sessionLookup "u"
   case maybeUId of 
-    Nothing -> raise "Unknown"
+    Nothing -> raise "maybeUId is nothing"
     Just v -> case decode v of
       Left _ -> raise "Format error"
       Right decoded -> do

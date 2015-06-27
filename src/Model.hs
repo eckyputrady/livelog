@@ -74,17 +74,20 @@ logQuery filterParam sortParam =
   select $ from $ \row -> do
   where_ (msgCondition row &&. sinceCondition row)
   limitCondition
-  orderBy orderCondition
+  orderBy $ map (orderCondition row) sortParam
   return row
   where
     msgCondition row = case (lfpMessage filterParam) of
       Nothing -> val True
-      Just msg -> ((row ^. LogMessage) `like` val msg)
+      Just msg -> ((row ^. LogMessage) `like` concat_ [(%), val msg, (%)])
     sinceCondition row = case (lfpSinceId filterParam) of
       Nothing -> val True
       Just sinceId -> (row ^. LogId >=. val sinceId)
     limitCondition = limit $ maybe 50 id (lfpLimit filterParam)
-    orderCondition = undefined
+    orderCondition row (LogSortCreatedAt dir) = parseDir dir $ (row ^. LogCreatedAt)
+    orderCondition row (LogSortMessage dir) = parseDir dir $ (row ^. LogMessage)
+    parseDir Asc = asc
+    parseDir Desc = desc
 
 -- LOGS
 

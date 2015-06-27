@@ -13,6 +13,8 @@ import Network.HTTP.Types (status201)
 import Data.Time
 import Control.Monad.IO.Class (liftIO)
 import Control.Applicative ((<$>))
+import Data.Text (splitOn)
+import Data.Maybe (catMaybes)
 
 import Types
 import Model
@@ -40,7 +42,14 @@ routes = do
                                             , lfpSinceId  = do  i <- maybeParam "sinceId" ps
                                                                 return $ toKey (i :: Int)
                                             }
-            sortParam ps = undefined
+            sortParam ps = case maybeParam "sort" ps of
+                              Nothing -> []
+                              Just p  -> catMaybes . map parseSort $ splitOn "," p
+            parseSort "createdAt"   = Just $ LogSortCreatedAt Asc 
+            parseSort "-createdAt"  = Just $ LogSortCreatedAt Desc
+            parseSort "message"     = Just $ LogSortMessage   Asc 
+            parseSort "-message"    = Just $ LogSortMessage   Desc
+            parseSort _             = Nothing
 
     _get _ = do
       i   <- param "id"
