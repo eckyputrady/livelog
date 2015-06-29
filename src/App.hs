@@ -1,8 +1,6 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
-module App where
+module App (runApp, runAppIO) where
 
 import Control.Applicative
 import Control.Monad.Trans (MonadTrans)
@@ -17,7 +15,7 @@ import Web.Scotty.Trans
 import qualified Database.Persist as DB
 import Database.Persist.Sql (ConnectionPool, runSqlPool, fromSqlKey, toSqlKey)
 import Network.HTTP.Types (status404, status201)
-import Network.Wai (Middleware(..), vault)
+import Network.Wai (Middleware(..), vault, Response(..))
 import Data.Text.Lazy.Encoding (decodeUtf8)
 
 import qualified Data.Vault.Lazy as Vault
@@ -46,22 +44,31 @@ application mws = do
   CLogTag.routes
   notFound notFoundA
 
--- runApp :: Config -> IO ()
-runApp c runner = do
+runAppIO c = do
   runSqlPool migrateModels (pool c)
   mws <- sequence [sessionMW c]
-  runner (def :: Options) (runIO c) $ application mws
+  scottyOptsT (def :: Options) runIO runIO $ application mws
   where
-    runIO :: Config -> ConfigM a -> IO a
-    runIO c m = runReaderT (runConfigM m) c
+    runIO :: ConfigM a -> IO a
+    runIO m = runReaderT (runConfigM m) c
 
     sessionMW :: Config -> IO Middleware
     sessionMW c = do
       sstore <- clientsessionStore <$> getDefaultKey
       return $ withSession sstore "session" def (vaultKey c)
 
-ioRunner a b c = scottyOptsT a b c
-appRunner _ = scottyAppT 
+runApp c = do
+  runSqlPool migrateModels (pool c)
+  mws <- sequence [sessionMW c]
+  scottyAppT runIO runIO $ application mws
+  where
+    runIO :: ConfigM a -> IO a
+    runIO m = runReaderT (runConfigM m) c
+
+    sessionMW :: Config -> IO Middleware
+    sessionMW c = do
+      sstore <- clientsessionStore <$> getDefaultKey
+      return $ withSession sstore "session" def (vaultKey c)
 
 --
 

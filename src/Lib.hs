@@ -1,4 +1,4 @@
-module Main where
+module Lib where
 
 import Control.Monad.Logger (runStdoutLoggingT)
 import Database.Persist.MySQL (createMySQLPool, defaultConnectInfo, connectDatabase, connectPassword)
@@ -9,7 +9,7 @@ import Types
 main :: IO ()
 main = do 
   c <- getConfig
-  runApp c ioRunner
+  runAppIO c
 
 getConfig = do
   p   <- runStdoutLoggingT $ createMySQLPool connInfo 10
