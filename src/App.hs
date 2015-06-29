@@ -15,8 +15,7 @@ import Data.ByteString (ByteString)
 import Prelude
 import Web.Scotty.Trans
 import qualified Database.Persist as DB
-import Database.Persist.MySQL (ConnectionPool, createMySQLPool, defaultConnectInfo, connectDatabase, connectPassword)
-import Database.Persist.Sql (runSqlPool, fromSqlKey, toSqlKey)
+import Database.Persist.Sql (ConnectionPool, runSqlPool, fromSqlKey, toSqlKey)
 import Network.HTTP.Types (status404, status201)
 import Network.Wai (Middleware(..), vault)
 import Data.Text.Lazy.Encoding (decodeUtf8)
@@ -47,11 +46,11 @@ application mws = do
   CLogTag.routes
   notFound notFoundA
 
-runApp :: Config -> IO ()
-runApp c = do
+-- runApp :: Config -> IO ()
+runApp c runner = do
   runSqlPool migrateModels (pool c)
   mws <- sequence [sessionMW c]
-  scottyOptsT def (runIO c) $ application mws
+  runner (def :: Options) (runIO c) $ application mws
   where
     runIO :: Config -> ConfigM a -> IO a
     runIO c m = runReaderT (runConfigM m) c
@@ -60,6 +59,9 @@ runApp c = do
     sessionMW c = do
       sstore <- clientsessionStore <$> getDefaultKey
       return $ withSession sstore "session" def (vaultKey c)
+
+ioRunner a b c = scottyOptsT a b c
+appRunner _ = scottyAppT 
 
 --
 

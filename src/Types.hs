@@ -7,7 +7,7 @@ import Control.Applicative
 import Control.Monad.Reader (MonadIO, MonadReader, ReaderT)
 import Data.ByteString (ByteString)
 import Data.Text.Lazy (Text)
-import Database.Persist.MySQL (ConnectionPool)
+import Database.Persist.Sql (ConnectionPool)
 import qualified Data.Vault.Lazy as Vault
 import Network.Wai.Session (Session)
 import Web.Scotty.Trans (ScottyT, ActionT)

@@ -11,15 +11,12 @@
 
 module Model where
 
-import Data.Text (Text)
 import Data.Maybe (listToMaybe)
 import Control.Applicative ((<$>))
-import Data.Monoid ((<>))
 import Data.Time (UTCTime)
 import Control.Monad.IO.Class (MonadIO(..))
 import Database.Esqueleto
 import Database.Persist.TH
-import Database.Persist.Sql (runSqlPool)
 import GHC.Int (Int64)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|

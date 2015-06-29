@@ -2,7 +2,6 @@ module Main where
 
 import Control.Monad.Logger (runStdoutLoggingT)
 import Database.Persist.MySQL (createMySQLPool, defaultConnectInfo, connectDatabase, connectPassword)
-import Database.Persist.Sql (runSqlPool)
 import qualified Data.Vault.Lazy as Vault
 import App
 import Types
@@ -10,7 +9,7 @@ import Types
 main :: IO ()
 main = do 
   c <- getConfig
-  runApp c
+  runApp c ioRunner
 
 getConfig = do
   p   <- runStdoutLoggingT $ createMySQLPool connInfo 10
