@@ -1,4 +1,4 @@
-module Lib where
+module Lib (main, getConfig, runAppIO, runApp) where
 
 import Control.Monad.Logger (runStdoutLoggingT)
 import Database.Persist.MySQL (createMySQLPool, defaultConnectInfo, connectDatabase, connectPassword)
