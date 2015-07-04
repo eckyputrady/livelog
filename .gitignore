@@ -19,3 +19,4 @@ cabal.sandbox.config
 *.hp
 db.txt
 .stack-work/
+.DS_Store

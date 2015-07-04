@@ -12,9 +12,11 @@
 module Model where
 
 import Data.Maybe (listToMaybe)
+import Data.Text (Text)
 import Control.Applicative ((<$>))
 import Data.Time (UTCTime)
 import Control.Monad.IO.Class (MonadIO(..))
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Database.Esqueleto
 import Database.Persist.TH
 import GHC.Int (Int64)
@@ -48,8 +50,8 @@ TagLog json
 
 -- Migration replated
 
-migrateModels :: (MonadIO m) => SqlPersistT m ()
-migrateModels = runMigration migrateAll
+migrateModels :: (MonadIO m, MonadBaseControl IO m) => SqlPersistT m [Text]
+migrateModels = runMigrationSilent migrateAll
 
 clearModels :: (MonadIO m) => SqlPersistT m ()
 clearModels = rawExecute "DROP TABLE IF EXISTS tag_log, tag, log, user" []
