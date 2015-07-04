@@ -1,4 +1,4 @@
-import Lib (runApp, getConfig)
+import Lib (runApp, getConfig, clearDB)
 
 import           Test.Hspec
 import           Test.Hspec.Wai
@@ -12,11 +12,12 @@ import qualified Controllers.LogTag as CLogTag
 main :: IO ()
 main = do
   c <- getConfig
-  hspec $ spec (runApp c)
+  hspec $ spec c
 
-spec app = with app $ do
-      CUsers.spec
-      CSessions.spec
-      CLogs.spec
-      CTags.spec
-      CLogTag.spec
+spec c = 
+	after_ (clearDB c) $ with (runApp c) $ do
+    CUsers.spec
+    CSessions.spec
+    CLogs.spec
+    CTags.spec
+    CLogTag.spec

@@ -49,7 +49,10 @@ TagLog json
 -- Migration replated
 
 migrateModels :: (MonadIO m) => SqlPersistT m ()
-migrateModels = runMigration migrateAll 
+migrateModels = runMigration migrateAll
+
+clearModels :: (MonadIO m) => SqlPersistT m ()
+clearModels = rawExecute "DROP TABLE IF EXISTS tag_log, tag, log, user" []
 
 -- Common func
 

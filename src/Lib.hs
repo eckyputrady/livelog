@@ -1,10 +1,11 @@
-module Lib (main, getConfig, runAppIO, runApp) where
+module Lib (main, getConfig, runAppIO, runApp, clearDB) where
 
-import Control.Monad.Logger (runStdoutLoggingT)
-import Database.Persist.MySQL (createMySQLPool, defaultConnectInfo, connectDatabase, connectPassword)
+import Control.Monad.Logger (runStdoutLoggingT, runNoLoggingT)
+import Database.Persist.MySQL (createMySQLPool, runSqlPool, defaultConnectInfo, connectDatabase, connectPassword)
 import qualified Data.Vault.Lazy as Vault
 import App
 import Types
+import Model
 
 main :: IO ()
 main = do 
@@ -12,7 +13,10 @@ main = do
   runAppIO c
 
 getConfig = do
-  p   <- runStdoutLoggingT $ createMySQLPool connInfo 10
+  p   <- runNoLoggingT $ createMySQLPool connInfo 10
   vk  <- Vault.newKey
   return $ Config { pool = p, vaultKey = vk }
   where connInfo = defaultConnectInfo { connectDatabase = "livelog", connectPassword = "" }
+
+clearDB :: Config -> IO ()
+clearDB c = runSqlPool clearModels (pool c)
