@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            Restful API service for activity logging
 description:         Please see README.md
 homepage:            http://github.com/eckyputrady/livelog
-license:             GPL3
+license:             GPL-3
 license-file:        LICENSE
 author:              Ecky Putrady
 maintainer:          eckyputrady@gmail.com
