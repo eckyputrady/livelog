@@ -1,12 +1,12 @@
 name:                livelog
 version:             0.1.0.0
-synopsis:            Initial project template from stack
+synopsis:            Restful API service for activity logging
 description:         Please see README.md
-homepage:            http://github.com/name/project
-license:             BSD3
+homepage:            http://github.com/eckyputrady/livelog
+license:             GPL3
 license-file:        LICENSE
-author:              Your name here
-maintainer:          your.address@example.com
+author:              Ecky Putrady
+maintainer:          eckyputrady@gmail.com
 -- copyright:           
 category:            Web
 build-type:          Simple
@@ -50,7 +50,7 @@ library
                       ,aeson
   default-language:    Haskell2010
 
-executable new-template-exe
+executable livelog-exe
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
@@ -58,7 +58,7 @@ executable new-template-exe
                      , livelog
   default-language:    Haskell2010
 
-test-suite new-template-test
+test-suite livelog-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
@@ -74,4 +74,4 @@ test-suite new-template-test
 
 source-repository head
   type:     git
-  location: https://github.com/name/project
+  location: https://github.com/eckyputrady/livelog
