@@ -95,14 +95,15 @@ data LogSaveParam = LogSaveParam
   }
 data SortDirection = Asc | Desc
 
-logQuery :: (MonadIO m) => LogFilterParam -> LogSortParam -> SqlPersistT m [Entity Log]
-logQuery filterParam sortParam = 
+logQuery :: (MonadIO m) => Key User -> LogFilterParam -> LogSortParam -> SqlPersistT m [Entity Log]
+logQuery userId filterParam sortParam = 
   select $ from $ \row -> do
-  where_ (msgCondition row &&. sinceCondition row)
+  where_ (userCondition row &&. msgCondition row &&. sinceCondition row)
   limitCondition
   orderBy $ map (orderCondition row) sortParam
   return row
   where
+    userCondition row = row ^. LogUserId ==. val userId
     msgCondition row = case (lfpMessage filterParam) of
       Nothing -> val True
       Just msg -> ((row ^. LogMessage) `like` concat_ [(%), val msg, (%)])

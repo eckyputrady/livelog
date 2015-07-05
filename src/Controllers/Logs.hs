@@ -34,7 +34,7 @@ routes = do
   where
     _query userId = do
       ps <- params
-      logs <- withDB $ logQuery (filterParam ps) (sortParam ps)
+      logs <- withDB $ logQuery userId (filterParam ps) (sortParam ps)
       json logs
       where filterParam ps = LogFilterParam { lfpMessage  = maybeParam "message" ps
                                             , lfpLimit    = do  i <- maybeParam "limit" ps
@@ -51,9 +51,9 @@ routes = do
             parseSort "-message"    = Just $ LogSortMessage   Desc
             parseSort _             = Nothing
 
-    _get _ = do
+    _get userId = do
       i   <- param "id"
-      (log :: Maybe Log) <- withDB $ getById (i :: Int)
+      log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
       maybe (raise NotFound) json log
 
     _save userId = do
@@ -67,12 +67,17 @@ routes = do
       d <- jsonData
       b <- liftIO $ toModel userId d
       i <- param "id"
-      l <- withDB $ DB.replace (toKey (i :: Int)) (b :: Log)
-      json l
+      log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
+      case log of
+        Nothing -> raise NotFound
+        Just _  -> withDB $ DB.replace (toKey (i :: Int)) (b :: Log)
 
     _delete userId = do
       i <- param "id"
-      withDB $ DB.delete $ (toKey (i :: Int) :: DB.Key Log)
+      log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
+      case log of
+        Nothing -> raise NotFound
+        Just _  -> withDB $ DB.delete $ (toKey (i :: Int) :: DB.Key Log)
 
 toModel :: UserId -> CParam -> IO Log
 toModel userId p = do
