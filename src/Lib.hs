@@ -17,16 +17,19 @@ main = do
   runAppIO c
 
 getConfig = do
+  rawCfg <- readRawConfig
+  p <- runNoLoggingT $ createMySQLPool (connInfo rawCfg) 10
+  vk <- Vault.newKey
+  return $ Config { pool = p, vaultKey = vk }
+  where connInfo cfg = 
+          defaultConnectInfo  { connectDatabase = (db_name cfg)
+                              , connectPassword = (db_password cfg) }
+
+readRawConfig = do
   content <- B.readFile "config.json"
   case Aeson.decode content of
     Nothing -> error "Config failed to be parsed"
-    Just rawCfg -> do
-      p <- runNoLoggingT $ createMySQLPool (connInfo rawCfg) 10
-      vk <- Vault.newKey
-      return $ Config { pool = p, vaultKey = vk }
-      where connInfo cfg = 
-              defaultConnectInfo  { connectDatabase = (db_name cfg)
-                                  , connectPassword = (db_password cfg) }
+    Just rawCfg -> return rawCfg
 
 clearDB :: Config -> IO ()
 clearDB c = runSqlPool clearModels (pool c)
