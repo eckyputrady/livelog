@@ -14,7 +14,7 @@ import Prelude
 import Web.Scotty.Trans
 import qualified Database.Persist as DB
 import Database.Persist.Sql (ConnectionPool, runSqlPool, fromSqlKey, toSqlKey)
-import Network.HTTP.Types (status404, status201)
+import Network.HTTP.Types (status404, status201, status400)
 import Network.Wai (Middleware(..), vault, Response(..))
 import Data.Text.Lazy.Encoding (decodeUtf8)
 
@@ -27,22 +27,28 @@ import Data.Serialize (encode, decode)
 import Model
 import Types
 import Controllers.Common
+import qualified Controllers.Sessions as CSessions
+import qualified Controllers.Users as CUsers
 import qualified Controllers.Logs as CLogs
 import qualified Controllers.Tags as CTags
 import qualified Controllers.LogTag as CLogTag
+import qualified Controllers.Error as CError
 
 application :: [Middleware] -> AppM ()
 application mws = do
   -- middlewares
   mapM_ middleware mws
 
+  -- error handling
+  defaultHandler CError.handler
+
   -- routes
-  sessionRoutes
-  userRoutes
+  CSessions.routes
+  CUsers.routes
   CLogs.routes
   CTags.routes
   CLogTag.routes
-  notFound notFoundA
+  notFound $ raise NotFound
 
 runAppIO c = do
   runSqlPool migrateModels (pool c)
@@ -69,37 +75,4 @@ runApp c = do
     sessionMW c = do
       sstore <- clientsessionStore <$> getDefaultKey
       return $ withSession sstore "session" def (vaultKey c)
-
---
-
-sessionRoutes :: AppM ()
-sessionRoutes = do
-  post    "/sessions"   _save
-  delete  "/sessions"   _delete
-  where
-    _save = do
-      d <- jsonData
-      user <- withDB $ DB.getByValue (d :: User)
-      case user of
-        Nothing -> 
-          notFoundA
-        Just v -> do
-          (_, sessionInsert) <- getSession
-          liftIO $ sessionInsert "u" $ encode . fromSqlKey . DB.entityKey $ v 
-          status status201
-
-    _delete = do
-      (_, sessionInsert) <- getSession
-      liftIO $ sessionInsert "u" ""
-
-
-userRoutes :: AppM ()
-userRoutes = do
-  post "/users"   _save
-  where
-    _save = do
-      b <- jsonData
-      l <- withDB $ DB.insert (b :: User)
-      status status201
-      json l
 

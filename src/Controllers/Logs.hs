@@ -54,7 +54,7 @@ routes = do
     _get _ = do
       i   <- param "id"
       (log :: Maybe Log) <- withDB $ getById (i :: Int)
-      maybe notFoundA json log
+      maybe (raise NotFound) json log
 
     _save userId = do
       d <- jsonData

@@ -41,7 +41,7 @@ tagLogRoutes = do
       json result
 
     _save' (Just _) (Just _) model  = withDB $ DB.insert model
-    _save' a b _                    = raise "not found"
+    _save' a b _                    = raise $ BadRequest "not found"
 
 logRoutes :: AppM ()
 logRoutes = do
@@ -62,7 +62,7 @@ logRoutes = do
       tag <- withDB $ getUserItem TagUserId userId TagId tagKey
       case (log, tag) of
         (Just _, Just _) -> withDB $ delLogTags logKey tagKey
-        _ -> notFoundA
+        _ -> raise NotFound
       
 
 tagRoutes :: AppM ()
@@ -84,7 +84,7 @@ tagRoutes = do
       tag <- withDB $ getUserItem TagUserId userId TagId tagKey
       case (log, tag) of
         (Just _, Just _) -> withDB $ delLogTags logKey tagKey
-        _ -> notFoundA
+        _ -> raise NotFound
 
 toModel :: UserId -> CParam -> TagLog
 toModel userId p = TagLog (toKey . tagId $ p) (toKey . logId $ p)

@@ -18,6 +18,6 @@ spec c =
 	after_ (clearDB c) $ with (runApp c) $ do
     CUsers.spec
     CSessions.spec
-    CLogs.spec
-    CTags.spec
-    CLogTag.spec
+    -- CLogs.spec
+    -- CTags.spec
+    -- CLogTag.spec

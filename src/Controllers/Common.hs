@@ -13,6 +13,7 @@ import Network.Wai (vault)
 import Data.Serialize (decode)
 import Network.HTTP.Types (status404)
 import Data.Text.Lazy (Text)
+import Data.Aeson (FromJSON)
 
 import Model
 import Types
@@ -28,15 +29,14 @@ maybeParam id params = do
     Left _ -> Nothing
     Right v -> Just v
 
-notFoundA :: ActM ()
-notFoundA = do
-  status status404
+jsonDataE :: (FromJSON a) => ActM a
+jsonDataE = jsonData `rescue` (\(Unhandled m) -> raise $ BadRequest m)
 
 getSession = do
   vk <- lift $ asks vaultKey
   req <- request
   case Vault.lookup vk (vault req) of
-    Nothing -> raise "Session unknown"
+    Nothing -> raise $ Unauthorized "Session unknown"
     Just x  -> return x
 
 requireUser :: ActM UserId
@@ -44,13 +44,12 @@ requireUser = do
   (sessionLookup, _) <- getSession
   maybeUId <- liftIO $ sessionLookup "u"
   case maybeUId of 
-    Nothing -> raise "maybeUId is nothing"
+    Nothing -> raise $ Unauthorized "maybeUId is nothing"
     Just v -> case decode v of
-      Left _ -> raise "Format error"
+      Left _ -> raise $ Unauthorized "Format error"
       Right decoded -> do
         let k = toSqlKey decoded
         mUser <- withDB $ DB.get (k :: UserId)
-        liftIO $ putStrLn $ "you are " ++ (show mUser)
         case mUser of
-          Nothing -> raise "Unknown user"
+          Nothing -> raise $ Unauthorized "Unknown user"
           Just user  -> return k

@@ -16,10 +16,13 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Lib
-                      ,App
+  other-modules:       App
                       ,Model
                       ,Types
+                      ,Controllers.Error
                       ,Controllers.Common
+                      ,Controllers.Users
+                      ,Controllers.Sessions
                       ,Controllers.LogTag
                       ,Controllers.Logs
                       ,Controllers.Tags
@@ -64,6 +67,8 @@ test-suite new-template-test
                      , hspec
                      , hspec-wai
                      , hspec-wai-json
+                     , http-types
+                     , wai-extra
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
