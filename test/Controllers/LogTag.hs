@@ -28,12 +28,46 @@ spec =
         delete "/logs/1/tags/1" `shouldRespondWith` 404
 
     describe "Authorized users" $ do
-      it "should fail to tag non-existent log" $ pending
-      it "should fail to tag a log with non-existent tag" $ pending
-      it "should success to tag a log with both tag & log being exists" $ pending
 
-      it "should list tags from a log properly" $ pending
-      it "should list logs from a tag properly" $ pending
+      it "should fail to tag non-existent log" $ do
+        c <- setupInitialData
+        request methodPost "/taglog" [("Cookie", c)] [json|{logId:10,tagId:1}|] `shouldRespondWith` 400
+
+      it "should OK to tag the same log more than once" $ do
+        c <- setupInitialData
+        request methodPost "/taglog" [("Cookie", c)] [json|{logId:1,tagId:1}|] `shouldRespondWith` 201
+
+      it "should fail to tag a log with non-existent tag" $ do
+        c <- setupInitialData
+        request methodPost "/taglog" [("Cookie", c)] [json|{logId:1,tagId:10}|] `shouldRespondWith` 400
+
+      it "should success to tag a log with both tag & log being exists" $ do
+        c <- setupInitialData
+        request methodPost "/logs" [("Cookie", c)] [json|{message:"test 2"}|] `shouldRespondWith` 201
+        request methodPost "/taglog" [("Cookie", c)] [json|{logId:2,tagId:2}|] `shouldRespondWith` 201
+
+      it "should not be able to tag something that not his" $ do
+        setupInitialData
+        (Just c) <- loginTestUser >>= return . getCookie
+        request methodPost "/taglog" [("Cookie", c)] [json|{logId:1,tagId:1}|] `shouldRespondWith` 400
+
+      it "should be able to untag" $ do
+        c <- setupInitialData
+        request methodDelete "/logs/1/tags/1" [("Cookie", c)] "" `shouldRespondWith` 200
+        request methodDelete "/tags/2/logs/1" [("Cookie", c)] "" `shouldRespondWith` 200
+        request methodGet "/logs/1/tags" [("Cookie", c)] "" `shouldRespondWith` "[]"
+
+      it "should not be able to untag items that not his" $ do
+        setupInitialData
+        (Just c) <- loginTestUser >>= return . getCookie
+        request methodDelete "/logs/1/tags/1" [("Cookie", c)] "" `shouldRespondWith` 404
+
+      it "should list tags from a log properly" $ do
+        c <- setupInitialData
+        request methodGet "/logs/1/tags" [("Cookie", c)] "" `shouldRespondWith` [json|[{id:1,userId:2,name:"test 1"},{id:2,userId:2,name:"test 2"}]|]
+
+      it "should list logs from a tag properly" $ 
+        pendingWith "unable to find a better method to check for messages (it has 'current time' value)"
 
 setupInitialData = do
   createTestUser
@@ -44,3 +78,4 @@ setupInitialData = do
   request methodPost "/logs" [("Cookie", c)] [json|{message:"test 1"}|] `shouldRespondWith` 201
   request methodPost "/taglog" [("Cookie", c)] [json|{logId:1,tagId:1}|] `shouldRespondWith` 201
   request methodPost "/taglog" [("Cookie", c)] [json|{logId:1,tagId:2}|] `shouldRespondWith` 201
+  return c

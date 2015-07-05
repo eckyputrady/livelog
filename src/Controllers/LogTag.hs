@@ -34,14 +34,22 @@ tagLogRoutes = do
   where
     _save userId = do
       d <- jsonData
-      log <- withDB $ getUserItem LogUserId userId LogId (toKey . logId $ d)
-      tag <- withDB $ getUserItem TagUserId userId TagId (toKey . tagId $ d)
-      result <- _save' log tag (toModel userId d)
-      status status201
-      json result
+      let _logId = toKey . logId $ d
+      let _tagId = toKey . tagId $ d
+      log <- withDB $ getUserItem LogUserId userId LogId _logId
+      tag <- withDB $ getUserItem TagUserId userId TagId _tagId
+      case (log, tag) of
+        (Nothing, _) -> raise $ BadRequest "log not found"
+        (_, Nothing) -> raise $ BadRequest "tag not found"
+        (_, _) -> do  _save' (toModel userId d) _logId _tagId
+                      status status201
 
-    _save' (Just _) (Just _) model  = withDB $ DB.insert model
-    _save' a b _                    = raise $ BadRequest "not found"
+    _save' model logId tagId = do 
+      tagLog <- withDB $ getUserItem TagLogTagId tagId TagLogLogId logId
+      case tagLog of
+        Nothing -> do withDB $ DB.insert model
+                      withDB $ getUserItem TagLogTagId tagId TagLogLogId logId
+        Just _  -> return tagLog
 
 logRoutes :: AppM ()
 logRoutes = do

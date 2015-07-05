@@ -21,4 +21,4 @@ spec c =
     CSessions.spec
     CLogs.spec
     CTags.spec
-    -- CLogTag.spec
+    CLogTag.spec
