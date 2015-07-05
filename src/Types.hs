@@ -1,8 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types where
 
+import GHC.Generics
+import qualified Data.Aeson as Aeson
 import Control.Applicative
 import Control.Monad.Reader (MonadIO, MonadReader, ReaderT)
 import Data.ByteString (ByteString)
@@ -11,6 +14,14 @@ import Database.Persist.Sql (ConnectionPool)
 import qualified Data.Vault.Lazy as Vault
 import Network.Wai.Session (Session)
 import Web.Scotty.Trans (ScottyT, ActionT, ScottyError(..))
+
+data RawConfig = RawConfig
+  { db_name :: String
+  , db_username :: String
+  , db_password :: String
+  } deriving (Generic)
+instance Aeson.ToJSON RawConfig
+instance Aeson.FromJSON RawConfig
 
 data Config = Config
   { pool :: ConnectionPool
