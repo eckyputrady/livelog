@@ -60,7 +60,7 @@ spec =
         setupInitialData
         (Just c) <- loginTestUser >>= return . getCookie
         request methodPost "/logs" [("Cookie", c)] [json|{message:"test 3"}|] `shouldRespondWith` 201
-        request methodPost "/logs/3" [("Cookie", c)] [json|{message:"test-test 3"}|] `shouldRespondWith` 200
+        request methodPut "/logs/3" [("Cookie", c)] [json|{message:"test-test 3"}|] `shouldRespondWith` 200
         response <- request methodGet "/logs/3" [("Cookie", c)] ""
         let body = decodeUtf8 . toStrict . simpleBody $ response
         liftIO $ body `shouldSatisfy` (isInfixOf "test-test 3")
@@ -68,7 +68,7 @@ spec =
       it "should fail to update logs the user has NOT created" $ do
         setupInitialData
         (Just c) <- loginTestUser >>= return . getCookie
-        request methodPost "/logs/1" [("Cookie", c)] [json|{message:"test-test 3"}|] `shouldRespondWith` 404
+        request methodPut "/logs/1" [("Cookie", c)] [json|{message:"test-test 3"}|] `shouldRespondWith` 404
 
       it "should be able to delete log the user has created" $ do
         setupInitialData

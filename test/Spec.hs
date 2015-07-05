@@ -17,8 +17,8 @@ main = do
 
 spec c = 
   after_ (clearDB c) $ with (runApp c) $ do
-    -- CUsers.spec
-    -- CSessions.spec
+    CUsers.spec
+    CSessions.spec
     CLogs.spec
-    -- CTags.spec
+    CTags.spec
     -- CLogTag.spec

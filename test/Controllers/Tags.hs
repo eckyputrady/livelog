@@ -5,19 +5,79 @@ module Controllers.Tags (spec) where
 import           Test.Hspec (describe, it)
 import           Test.Hspec.Wai
 import           Test.Hspec.Wai.JSON
+import Util
+import Network.HTTP.Types
 
 spec = 
   describe "Tags" $ do
+
     describe "Unauthorized users" $ do
-      it "should fail to query" $ pending
-      it "should fail to get" $ pending
-      it "should fail to post" $ pending
-      it "should fail to put" $ pending
-      it "should fail to delete" $ pending
+
+      it "should fail to query" $ do
+        setupInitialData
+        get "/tags" `shouldRespondWith` 404
+
+      it "should fail to get" $ do
+        setupInitialData
+        get "/tags/1" `shouldRespondWith` 404
+
+      it "should fail to post" $ do
+        setupInitialData
+        post "/tags/" [json|{name:"should fail"}|] `shouldRespondWith` 404
+
+      it "should fail to put" $ do
+        setupInitialData
+        put "/tags/1" [json|{name:"should fail"}|] `shouldRespondWith` 404
+
+      it "should fail to delete" $  do
+        setupInitialData
+        delete "/tags/1" `shouldRespondWith` 404
+
     describe "Authorized users" $ do
-      it "should return empty if user has not input anything" $ pending
-      it "should return the tags the user has created" $ pending
-      it "should be able to update the tags the user has created" $ pending
-      it "should fail to update the tags the user has NOT created" $ pending
-      it "should be able to delete tag the user has created" $ pending
-      it "should fail to delete the user has NOT created" $ pending
+      it "should return empty if user has not input anything" $ do
+        setupInitialData
+        (Just c) <- loginTestUser >>= return . getCookie
+        request methodGet "/tags" [("Cookie", c)] "" `shouldRespondWith` "[]"
+
+      it "should return the items the user has created" $ do
+        setupInitialData
+        (Just c) <- loginTestUser >>= return . getCookie
+        request methodPost "/tags" [("Cookie", c)] [json|{name:"test 3"}|] `shouldRespondWith` 201
+        request methodGet "/tags" [("Cookie", c)] "" `shouldRespondWith` [json|[{name:"test 3",id:3,userId:1}]|]
+
+      it "should not be able to access item that is not his" $ do
+        setupInitialData
+        (Just c) <- loginTestUser >>= return . getCookie
+        request methodGet "/tags/1" [("Cookie", c)] "" `shouldRespondWith` 404
+
+      it "should be able to update the items the user has created" $ do
+        setupInitialData
+        (Just c) <- loginTestUser >>= return . getCookie
+        request methodPost "/tags" [("Cookie", c)] [json|{name:"test 3"}|] `shouldRespondWith` 201
+        request methodPut "/tags/3" [("Cookie", c)] [json|{name:"test-test 3"}|] `shouldRespondWith` 200
+        request methodGet "/tags/3" [("Cookie", c)] "" `shouldRespondWith` [json|{name:"test-test 3",id:3,userId:1}|]
+
+      it "should fail to update items the user has NOT created" $ do
+        setupInitialData
+        (Just c) <- loginTestUser >>= return . getCookie
+        request methodPut "/tags/1" [("Cookie", c)] [json|{name:"test-test 3"}|] `shouldRespondWith` 404
+
+      it "should be able to delete item the user has created" $ do
+        setupInitialData
+        (Just c) <- loginTestUser >>= return . getCookie
+        request methodPost "/tags" [("Cookie", c)] [json|{name:"test 3"}|] `shouldRespondWith` 201
+        request methodDelete "/tags/3" [("Cookie", c)] "" `shouldRespondWith` 200
+        request methodGet "/tags/3" [("Cookie", c)] "" `shouldRespondWith` 404
+
+      it "should fail to delete the item user has NOT created" $ do
+        setupInitialData
+        (Just c) <- loginTestUser >>= return . getCookie
+        request methodDelete "/tags/1" [("Cookie", c)] "" `shouldRespondWith` 404
+        request methodDelete "/tags/3" [("Cookie", c)] "" `shouldRespondWith` 404
+
+setupInitialData = do
+  createTestUser
+  createUser "dummy"
+  (Just c) <- loginUser "dummy" >>= return . getCookie
+  request methodPost "/tags" [("Cookie", c)] [json|{name:"test 1"}|] `shouldRespondWith` 201
+  request methodPost "/tags" [("Cookie", c)] [json|{name:"test 2"}|] `shouldRespondWith` 201

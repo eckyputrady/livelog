@@ -29,7 +29,7 @@ routes = do
   get     "/logs"     $ requireUser >>= _query
   post    "/logs"     $ requireUser >>= _save
   get     "/logs/:id" $ requireUser >>= _get
-  post    "/logs/:id" $ requireUser >>= _update
+  put     "/logs/:id" $ requireUser >>= _update
   delete  "/logs/:id" $ requireUser >>= _delete
   where
     _query userId = do

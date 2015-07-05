@@ -27,17 +27,17 @@ routes = do
   get     "/tags"     $ requireUser >>= _query
   post    "/tags"     $ requireUser >>= _save
   get     "/tags/:id" $ requireUser >>= _get
-  post    "/tags/:id" $ requireUser >>= _update
+  put     "/tags/:id" $ requireUser >>= _update
   delete  "/tags/:id" $ requireUser >>= _delete
   where
     _query userId = do
       (items :: [DB.Entity Tag]) <- withDB $ getFor TagUserId userId
       json items
 
-    _get _ = do
+    _get userId = do
       i   <- param "id"
-      (log :: Maybe Tag) <- withDB $ getById (i :: Int)
-      json log
+      item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
+      maybe (raise NotFound) json item
 
     _save userId = do
       d <- jsonData
@@ -50,12 +50,17 @@ routes = do
       d <- jsonData
       b <- liftIO $ toModel userId d
       i <- param "id"
-      l <- withDB $ DB.replace (toKey (i :: Int)) (b :: Tag)
-      json l
+      item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
+      case item of
+        Nothing -> raise NotFound
+        Just _  -> withDB $ DB.replace (toKey (i :: Int)) (b :: Tag)
 
     _delete userId = do
       i <- param "id"
-      withDB $ DB.delete $ (toKey (i :: Int) :: DB.Key Tag)
+      item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
+      case item of
+        Nothing -> raise NotFound
+        Just _  -> withDB $ DB.delete $ (toKey (i :: Int) :: DB.Key Tag)
 
 toModel :: UserId -> CParam -> IO Tag
 toModel userId p = do
