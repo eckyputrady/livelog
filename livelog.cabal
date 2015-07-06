@@ -38,7 +38,7 @@ library
                       ,esqueleto
                       ,monad-logger
                       ,monad-control
-                      ,scotty
+                      ,scotty ==0.10.1
                       ,http-types
                       ,data-default-class
                       ,wai-session

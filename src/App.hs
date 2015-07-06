@@ -53,7 +53,7 @@ application mws = do
 runAppIO c = do
   runSqlPool migrateModels (pool c)
   mws <- sequence [sessionMW c]
-  scottyOptsT (def :: Options) runIO runIO $ application mws
+  scottyOptsT (def :: Options) runIO $ application mws
   where
     runIO :: ConfigM a -> IO a
     runIO m = runReaderT (runConfigM m) c
@@ -66,7 +66,7 @@ runAppIO c = do
 runApp c = do
   runSqlPool migrateModels (pool c)
   mws <- sequence [sessionMW c]
-  scottyAppT runIO runIO $ application mws
+  scottyAppT runIO $ application mws
   where
     runIO :: ConfigM a -> IO a
     runIO m = runReaderT (runConfigM m) c
