@@ -1,7 +1,12 @@
 #! /bin/bash
+cat /etc/hosts
+env
+ghc --version
+cabal --version
 
 cabal sandbox init
 cabal update
+cabal configure
 cabal install --only-dependencies --enable-tests
 cabal test
 cabal build
