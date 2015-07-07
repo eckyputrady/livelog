@@ -16,7 +16,8 @@ import Network.Wai.Session (Session)
 import Web.Scotty.Trans (ScottyT, ActionT, ScottyError(..))
 
 data RawConfig = RawConfig
-  { db_name :: String
+  { db_host :: String
+  , db_name :: String
   , db_username :: String
   , db_password :: String
   } deriving (Generic)

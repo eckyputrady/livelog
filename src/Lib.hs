@@ -1,35 +1,60 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 
 module Lib (main, getConfig, runAppIO, runApp, clearDB) where
 
 import qualified Data.ByteString.Lazy as B
 import Control.Monad.Logger (runStdoutLoggingT, runNoLoggingT)
-import Database.Persist.MySQL (createMySQLPool, runSqlPool, defaultConnectInfo, connectDatabase, connectPassword)
+import Database.Persist.MySQL (createMySQLPool, runSqlPool, defaultConnectInfo, connectDatabase, connectPassword, connectUser, connectHost)
 import qualified Data.Vault.Lazy as Vault
 import App
 import Types
 import Model
 import qualified Data.Aeson as Aeson
+import System.Environment
+import Control.Applicative
+import Control.Exception (try, SomeException(..))
+import Control.Concurrent (threadDelay)
+import Data.Either
 
 main :: IO ()
 main = do 
-  c <- getConfig
-  runAppIO c
+  threadDelay $ 5 * 1000 * 1000 -- waiting in case db is not up
+  ec <- try getConfig
+  case ec of
+    Left (e :: SomeException)  -> do  
+      putStrLn "Failed to get config, waiting & retry" 
+      threadDelay $ 5 * 1000 * 1000
+      main
+    Right c -> 
+      runAppIO c
 
 getConfig = do
+  vk <- Vault.newKey
   rawCfg <- readRawConfig
   p <- runNoLoggingT $ createMySQLPool (connInfo rawCfg) 10
-  vk <- Vault.newKey
   return $ Config { pool = p, vaultKey = vk }
   where connInfo cfg = 
           defaultConnectInfo  { connectDatabase = (db_name cfg)
-                              , connectPassword = (db_password cfg) }
+                              , connectHost     = (db_host cfg)
+                              , connectUser     = (db_username cfg)
+                              , connectPassword = (db_password cfg) 
+                              }
 
 readRawConfig = do
-  content <- B.readFile "config.json"
-  case Aeson.decode content of
-    Nothing -> error "Config failed to be parsed"
-    Just rawCfg -> return rawCfg
+  dbName  <- lookupEnv "LIVELOG_DB_NAME"
+  dbUname <- lookupEnv "LIVELOG_DB_USERNAME"
+  dbPassw <- lookupEnv "LIVELOG_DB_PASSWORD"
+  dbHost  <- return . return $ "db"
+  let cfg = RawConfig <$> dbHost
+                      <*> dbName
+                      <*> dbUname
+                      <*> dbPassw
+  case cfg of
+    Nothing -> error "No config found"
+    Just v  -> return v
+
 
 clearDB :: Config -> IO ()
 clearDB c = runSqlPool clearModels (pool c)
