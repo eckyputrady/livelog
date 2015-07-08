@@ -8,6 +8,7 @@ import           Test.Hspec.Wai.JSON
 import Network.HTTP.Types
 import Network.Wai.Test (SResponse(simpleHeaders))
 import Util
+import Control.Applicative
 
 
 spec = 
@@ -32,7 +33,7 @@ spec =
 
     it "getting current session after having a session should succeed" $ do
       createTestUser
-      (Just cookie) <- loginTestUser >>= return . getCookie
+      (Just cookie) <- getCookie <$> loginTestUser
       request methodGet "/sessions" [("Cookie", cookie)] "" `shouldRespondWith` [json|{name:"ecky"}|]
 
     it "getting current session after removing current session should fail" $ do

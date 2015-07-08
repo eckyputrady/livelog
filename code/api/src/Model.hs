@@ -75,7 +75,7 @@ getUserItem userF userId itemF itemId =
 
 delWithCond xs = 
   delete $ from $ \item ->
-  where_ (foldr (&&.) (val True) $ map (parseCond item) xs)
+  where_ $ foldr ((&&.) . parseCond item) (val True) xs
   where 
     parseCond item (getterF, getterVal) =
       item ^. getterF ==. val getterVal

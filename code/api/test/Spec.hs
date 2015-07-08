@@ -8,6 +8,7 @@ import qualified Controllers.Sessions as CSessions
 import qualified Controllers.Logs as CLogs
 import qualified Controllers.Tags as CTags
 import qualified Controllers.LogTag as CLogTag
+import qualified UserJourney
 
 main :: IO ()
 main = do
@@ -22,3 +23,4 @@ spec c =
     CLogs.spec
     CTags.spec
     CLogTag.spec
+    UserJourney.spec

@@ -7,6 +7,7 @@ import           Test.Hspec.Wai
 import           Test.Hspec.Wai.JSON
 import Util
 import Network.HTTP.Types
+import Control.Applicative
 
 spec = 
   describe "LogTag" $ do
@@ -48,7 +49,7 @@ spec =
 
       it "should not be able to tag something that not his" $ do
         setupInitialData
-        (Just c) <- loginTestUser >>= return . getCookie
+        (Just c) <- getCookie <$> loginTestUser
         request methodPost "/taglog" [("Cookie", c)] [json|{logId:1,tagId:1}|] `shouldRespondWith` 400
 
       it "should be able to untag" $ do
@@ -59,7 +60,7 @@ spec =
 
       it "should not be able to untag items that not his" $ do
         setupInitialData
-        (Just c) <- loginTestUser >>= return . getCookie
+        (Just c) <- getCookie <$> loginTestUser
         request methodDelete "/logs/1/tags/1" [("Cookie", c)] "" `shouldRespondWith` 404
 
       it "should list tags from a log properly" $ do
@@ -72,7 +73,7 @@ spec =
 setupInitialData = do
   createTestUser
   createUser "dummy"
-  (Just c) <- loginUser "dummy" >>= return . getCookie
+  (Just c) <- getCookie <$> loginUser "dummy"
   request methodPost "/tags" [("Cookie", c)] [json|{name:"test 1"}|] `shouldRespondWith` 201
   request methodPost "/tags" [("Cookie", c)] [json|{name:"test 2"}|] `shouldRespondWith` 201
   request methodPost "/logs" [("Cookie", c)] [json|{message:"test 1"}|] `shouldRespondWith` 201

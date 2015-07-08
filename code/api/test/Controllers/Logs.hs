@@ -11,6 +11,7 @@ import Network.Wai.Test (SResponse(simpleBody))
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text (isInfixOf)
 import Data.ByteString.Lazy (toStrict)
+import Control.Applicative
 
 spec = 
   describe "Logs" $ do
@@ -40,12 +41,12 @@ spec =
     describe "Authorized users" $ do
       it "should return empty if user has not input anything" $ do
         setupInitialData
-        (Just c) <- loginTestUser >>= return . getCookie
+        (Just c) <- getCookie <$> loginTestUser
         request methodGet "/logs" [("Cookie", c)] "" `shouldRespondWith` "[]"
 
       it "should return the logs the user has created" $ do
         setupInitialData
-        (Just c) <- loginTestUser >>= return . getCookie
+        (Just c) <- getCookie <$> loginTestUser
         request methodPost "/logs" [("Cookie", c)] [json|{message:"test 3"}|] `shouldRespondWith` 201
         response <- request methodGet "/logs" [("Cookie", c)] ""
         let body = decodeUtf8 . toStrict . simpleBody $ response
@@ -53,12 +54,12 @@ spec =
 
       it "should not be able to access logs that is not his" $ do
         setupInitialData
-        (Just c) <- loginTestUser >>= return . getCookie
+        (Just c) <- getCookie <$> loginTestUser
         request methodGet "/logs/1" [("Cookie", c)] "" `shouldRespondWith` 404
 
       it "should be able to update the logs the user has created" $ do
         setupInitialData
-        (Just c) <- loginTestUser >>= return . getCookie
+        (Just c) <- getCookie <$> loginTestUser
         request methodPost "/logs" [("Cookie", c)] [json|{message:"test 3"}|] `shouldRespondWith` 201
         request methodPut "/logs/3" [("Cookie", c)] [json|{message:"test-test 3"}|] `shouldRespondWith` 200
         response <- request methodGet "/logs/3" [("Cookie", c)] ""
@@ -67,24 +68,24 @@ spec =
 
       it "should fail to update logs the user has NOT created" $ do
         setupInitialData
-        (Just c) <- loginTestUser >>= return . getCookie
+        (Just c) <- getCookie <$> loginTestUser
         request methodPut "/logs/1" [("Cookie", c)] [json|{message:"test-test 3"}|] `shouldRespondWith` 404
 
       it "should be able to delete log the user has created" $ do
         setupInitialData
-        (Just c) <- loginTestUser >>= return . getCookie
+        (Just c) <- getCookie <$> loginTestUser
         request methodPost "/logs" [("Cookie", c)] [json|{message:"test 3"}|] `shouldRespondWith` 201
         request methodDelete "/logs/3" [("Cookie", c)] "" `shouldRespondWith` 200
 
       it "should fail to delete the log user has NOT created" $ do
         setupInitialData
-        (Just c) <- loginTestUser >>= return . getCookie
+        (Just c) <- getCookie <$> loginTestUser
         request methodDelete "/logs/1" [("Cookie", c)] "" `shouldRespondWith` 404
         request methodDelete "/logs/3" [("Cookie", c)] "" `shouldRespondWith` 404
 
 setupInitialData = do
   createTestUser
   createUser "dummy"
-  (Just c) <- loginUser "dummy" >>= return . getCookie
+  (Just c) <- getCookie <$> loginUser "dummy"
   request methodPost "/logs" [("Cookie", c)] [json|{message:"test 1"}|] `shouldRespondWith` 201
   request methodPost "/logs" [("Cookie", c)] [json|{message:"test 2"}|] `shouldRespondWith` 201
