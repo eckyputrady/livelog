@@ -1,0 +1,14 @@
+db:
+  image: "mysql:5.7"
+  env_file: env
+
+dev:
+  build: ../haskell-dev
+  env_file: env
+  volumes:
+    - "../../code/api:/livelog"
+  ports:
+    - "3000:3000"
+  links:
+    - db
+  command: sleep infinity

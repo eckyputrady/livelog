@@ -1,0 +1,12 @@
+db:
+  image: "mysql:5.7"
+  env_file: env
+
+dev:
+  image: ecky/livelog
+  env_file: env
+  ports:
+    - "80:3000"
+  links:
+    - db
+  command: /livelog/livelog-exe
