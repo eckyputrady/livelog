@@ -2,6 +2,7 @@
 
 case "$1 $2" in
   "dev up")       cd infra/env-dev
+                  docker-compose build
                   docker-compose up -d
                   sleep 1
                   docker exec -it envdev_dev_1 /bin/bash
@@ -13,13 +14,10 @@ case "$1 $2" in
                   ;;
 
   "build up")     cd infra/env-build
+                  docker-compose build
                   docker-compose up
                   docker-compose rm -f
                   cp -rf ../../code/api/dist/livelog ../haskell-deploy
-                  docker build -t ecky/livelog ../haskell-deploy
-                  ;;
-
-  "pkg up")       cd infra/env-build
                   docker build -t ecky/livelog ../haskell-deploy
                   ;;
 
@@ -27,7 +25,12 @@ case "$1 $2" in
                   docker-compose rm -f
                   ;;
 
+  "pkg up")       cd infra/env-build
+                  docker build -t ecky/livelog ../haskell-deploy
+                  ;;
+
   "deploy up")    cd infra/env-deploy
+                  docker-compose build
                   docker-compose up -d
                   ;;
 
