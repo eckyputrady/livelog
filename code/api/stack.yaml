@@ -1,8 +1,0 @@
-flags: {}
-packages:
-- '.'
-extra-deps: [
-  'wai-session-0.3.1',
-  'wai-session-clientsession-0.1'
-]
-resolver: lts-2.17

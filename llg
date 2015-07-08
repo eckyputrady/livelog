@@ -12,11 +12,19 @@ case "$1 $2" in
                   docker-compose rm -f
                   ;;
 
-  "build")        cd infra/env-build
+  "build up")     cd infra/env-build
                   docker-compose up
                   docker-compose rm -f
                   cp -rf ../../code/api/dist/livelog ../haskell-deploy
-                  docker build -t ../haskell-deploy
+                  docker build -t ecky/livelog ../haskell-deploy
+                  ;;
+
+  "pkg up")       cd infra/env-build
+                  docker build -t ecky/livelog ../haskell-deploy
+                  ;;
+
+  "build down")   cd infra/env-build
+                  docker-compose rm -f
                   ;;
 
   "deploy up")    cd infra/env-deploy
