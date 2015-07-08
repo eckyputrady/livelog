@@ -14,21 +14,19 @@ import Model
 import qualified Data.Aeson as Aeson
 import System.Environment
 import Control.Applicative
-import Control.Exception (try, SomeException(..))
+import Control.Exception (try, SomeException(..), catch)
 import Control.Concurrent (threadDelay)
 import Data.Either
+import System.IO.Error
 
 main :: IO ()
-main = do 
-  threadDelay $ 5 * 1000 * 1000 -- waiting in case db is not up
-  ec <- try getConfig
-  case ec of
-    Left (e :: SomeException)  -> do  
-      putStrLn "Failed to get config, waiting & retry" 
-      threadDelay $ 5 * 1000 * 1000
-      main
-    Right c -> 
-      runAppIO c
+main = do
+  c <- getConfig
+  runAppIO c `catch` \(e :: SomeException) -> do
+    putStrLn . show $ e
+    putStrLn "Failed to start, waiting & retry"
+    threadDelay $ 5 * 1000 * 1000
+    main
 
 getConfig = do
   vk <- Vault.newKey
@@ -54,7 +52,6 @@ readRawConfig = do
   case cfg of
     Nothing -> error "No config found"
     Just v  -> return v
-
 
 clearDB :: Config -> IO ()
 clearDB c = runSqlPool clearModels (pool c)

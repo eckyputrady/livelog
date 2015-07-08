@@ -7,7 +7,7 @@ cabal sandbox init
 cabal update
 cabal configure
 cabal install --only-dependencies --enable-tests
-cabal test
+cabal test --show-details=streaming
 cabal build
 
 echo "Packaging application ..."
