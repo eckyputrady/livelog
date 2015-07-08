@@ -14,7 +14,7 @@ import Data.Time
 import Control.Monad.IO.Class (liftIO)
 import Control.Applicative ((<$>))
 import Data.Text (splitOn)
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
 
 import Types
 import Model
@@ -44,7 +44,7 @@ routes = do
                                             }
             sortParam ps = case maybeParam "sort" ps of
                               Nothing -> []
-                              Just p  -> catMaybes . map parseSort $ splitOn "," p
+                              Just p  -> mapMaybe parseSort $ splitOn "," p
             parseSort "createdAt"   = Just $ LogSortCreatedAt Asc 
             parseSort "-createdAt"  = Just $ LogSortCreatedAt Desc
             parseSort "message"     = Just $ LogSortMessage   Asc 
@@ -77,7 +77,7 @@ routes = do
       log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
       case log of
         Nothing -> raise NotFound
-        Just _  -> withDB $ DB.delete $ (toKey (i :: Int) :: DB.Key Log)
+        Just _  -> withDB $ DB.delete (toKey (i :: Int) :: DB.Key Log)
 
 toModel :: UserId -> CParam -> IO Log
 toModel userId p = do

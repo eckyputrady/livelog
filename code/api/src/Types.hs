@@ -1,6 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Types where
 
@@ -16,13 +15,11 @@ import Network.Wai.Session (Session)
 import Web.Scotty.Trans (ScottyT, ActionT, ScottyError(..))
 
 data RawConfig = RawConfig
-  { db_host :: String
-  , db_name :: String
-  , db_username :: String
-  , db_password :: String
-  } deriving (Generic)
-instance Aeson.ToJSON RawConfig
-instance Aeson.FromJSON RawConfig
+  { dbHost :: String
+  , dbName :: String
+  , dbUsername :: String
+  , dbPassword :: String
+  }
 
 data Config = Config
   { pool :: ConnectionPool

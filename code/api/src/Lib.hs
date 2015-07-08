@@ -23,7 +23,7 @@ main :: IO ()
 main = do
   c <- getConfig
   runAppIO c `catch` \(e :: SomeException) -> do
-    putStrLn . show $ e
+    print e
     putStrLn "Failed to start, waiting & retry"
     threadDelay $ 5 * 1000 * 1000
     main
@@ -32,12 +32,12 @@ getConfig = do
   vk <- Vault.newKey
   rawCfg <- readRawConfig
   p <- runNoLoggingT $ createMySQLPool (connInfo rawCfg) 10
-  return $ Config { pool = p, vaultKey = vk }
+  return Config { pool = p, vaultKey = vk }
   where connInfo cfg = 
-          defaultConnectInfo  { connectDatabase = (db_name cfg)
-                              , connectHost     = (db_host cfg)
-                              , connectUser     = (db_username cfg)
-                              , connectPassword = (db_password cfg) 
+          defaultConnectInfo  { connectDatabase = dbName cfg
+                              , connectHost     = dbHost cfg
+                              , connectUser     = dbUsername cfg
+                              , connectPassword = dbPassword cfg
                               }
 
 readRawConfig = do

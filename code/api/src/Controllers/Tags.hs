@@ -60,8 +60,7 @@ routes = do
       item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
       case item of
         Nothing -> raise NotFound
-        Just _  -> withDB $ DB.delete $ (toKey (i :: Int) :: DB.Key Tag)
+        Just _  -> withDB $ DB.delete (toKey (i :: Int) :: DB.Key Tag)
 
 toModel :: UserId -> CParam -> IO Tag
-toModel userId p = do
-  return $ Tag userId (name p)
+toModel userId p = return $ Tag userId (name p)

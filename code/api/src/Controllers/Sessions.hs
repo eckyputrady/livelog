@@ -7,7 +7,6 @@ module Controllers.Sessions (routes) where
 import GHC.Generics
 import qualified Data.Aeson as Aeson
 import Web.Scotty.Trans
-import qualified Database.Persist as DB
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
 import Network.HTTP.Types (status201)
 import Data.Time
@@ -52,5 +51,4 @@ routes = do
       liftIO $ sessionInsert "u" ""
 
 toModel :: UserId -> CParam -> IO Tag
-toModel userId p = do
-  return $ Tag userId (name p)
+toModel userId p = return $ Tag userId (name p)

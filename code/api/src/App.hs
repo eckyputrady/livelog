@@ -50,23 +50,14 @@ application mws = do
   CLogTag.routes
   notFound $ raise NotFound
 
-runAppIO c = do
+runAppIO = run (scottyOptsT (def :: Options))
+
+runApp = run scottyAppT
+
+run runner c = do
   runSqlPool migrateModels (pool c)
   mws <- sequence [sessionMW c]
-  scottyOptsT (def :: Options) runIO $ application mws
-  where
-    runIO :: ConfigM a -> IO a
-    runIO m = runReaderT (runConfigM m) c
-
-    sessionMW :: Config -> IO Middleware
-    sessionMW c = do
-      sstore <- clientsessionStore <$> getDefaultKey
-      return $ withSession sstore "session" def (vaultKey c)
-
-runApp c = do
-  runSqlPool migrateModels (pool c)
-  mws <- sequence [sessionMW c]
-  scottyAppT runIO $ application mws
+  runner runIO $ application mws
   where
     runIO :: ConfigM a -> IO a
     runIO m = runReaderT (runConfigM m) c
