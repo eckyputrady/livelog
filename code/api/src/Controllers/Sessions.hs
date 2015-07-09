@@ -25,30 +25,31 @@ instance Aeson.FromJSON CParam
 
 routes :: AppM ()
 routes = do
-  get     "/sessions"   $ requireUser >>= _get
-  post    "/sessions"   $ _save
-  delete  "/sessions"   $ _delete
-  where
-    _get userId = do
-      user <- withDB $ DB.get userId
-      case user of
-        Nothing -> raise NotFound
-        Just v -> json $ CParam (userName v)
+  get     "/sessions"   getOne
+  post    "/sessions"   save
+  delete  "/sessions"   remove
 
-    _save = do
-      d <- jsonDataE
-      user <- withDB $ DB.getByValue (d :: User)
-      case user of
-        Nothing -> 
-          raise $ BadRequest "user not found"
-        Just v -> do
-          (_, sessionInsert) <- getSession
-          liftIO $ sessionInsert "u" $ encode . fromSqlKey . DB.entityKey $ v 
-          status status201
+getOne :: ActM ()
+getOne = do
+  userId <- getUserId
+  user <- withDB $ DB.get userId
+  case user of
+    Nothing -> raise NotFound
+    Just v -> json $ CParam (userName v)
 
-    _delete = do
+save :: ActM ()
+save = do
+  d <- jsonDataE
+  user <- withDB $ DB.getByValue (d :: User)
+  case user of
+    Nothing -> 
+      raise $ BadRequest "user not found"
+    Just v -> do
       (_, sessionInsert) <- getSession
-      liftIO $ sessionInsert "u" ""
+      liftIO . sessionInsert "u" . encode . fromSqlKey . DB.entityKey $ v 
+      status status201
 
-toModel :: UserId -> CParam -> IO Tag
-toModel userId p = return $ Tag userId (name p)
+remove :: ActM ()
+remove = do
+  (_, sessionInsert) <- getSession
+  liftIO $ sessionInsert "u" ""

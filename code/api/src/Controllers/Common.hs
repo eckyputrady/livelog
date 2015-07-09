@@ -53,3 +53,6 @@ requireUser = do
         case mUser of
           Nothing -> raise $ Unauthorized "Unknown user"
           Just user  -> return k
+
+getUserId :: ActM UserId
+getUserId = requireUser

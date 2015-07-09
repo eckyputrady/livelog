@@ -26,58 +26,68 @@ instance Aeson.FromJSON CParam
 
 routes :: AppM ()
 routes = do
-  get     "/logs"     $ requireUser >>= _query
-  post    "/logs"     $ requireUser >>= _save
-  get     "/logs/:id" $ requireUser >>= _get
-  put     "/logs/:id" $ requireUser >>= _update
-  delete  "/logs/:id" $ requireUser >>= _delete
-  where
-    _query userId = do
-      ps <- params
-      logs <- withDB $ logQuery userId (filterParam ps) (sortParam ps)
-      json logs
-      where filterParam ps = LogFilterParam { lfpMessage  = maybeParam "message" ps
-                                            , lfpLimit    = do  i <- maybeParam "limit" ps
-                                                                return $ fromIntegral (i :: Int)
-                                            , lfpSinceId  = do  i <- maybeParam "sinceId" ps
-                                                                return $ toKey (i :: Int)
-                                            }
-            sortParam ps = case maybeParam "sort" ps of
-                              Nothing -> []
-                              Just p  -> mapMaybe parseSort $ splitOn "," p
-            parseSort "createdAt"   = Just $ LogSortCreatedAt Asc 
-            parseSort "-createdAt"  = Just $ LogSortCreatedAt Desc
-            parseSort "message"     = Just $ LogSortMessage   Asc 
-            parseSort "-message"    = Just $ LogSortMessage   Desc
-            parseSort _             = Nothing
+  get     "/logs"     query
+  post    "/logs"     save
+  get     "/logs/:id" getOne
+  put     "/logs/:id" update
+  delete  "/logs/:id" remove
 
-    _get userId = do
-      i   <- param "id"
-      log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
-      maybe (raise NotFound) json log
+query :: ActM ()
+query = do
+  userId <- getUserId
+  ps <- params
+  logs <- withDB $ logQuery userId (filterParam ps) (sortParam ps)
+  json logs
+  where filterParam ps = LogFilterParam { lfpMessage  = maybeParam "message" ps
+                                        , lfpLimit    = do  i <- maybeParam "limit" ps
+                                                            return $ fromIntegral (i :: Int)
+                                        , lfpSinceId  = do  i <- maybeParam "sinceId" ps
+                                                            return $ toKey (i :: Int)
+                                        }
+        sortParam ps = case maybeParam "sort" ps of
+                          Nothing -> []
+                          Just p  -> mapMaybe parseSort $ splitOn "," p
+        parseSort "createdAt"   = Just $ LogSortCreatedAt Asc 
+        parseSort "-createdAt"  = Just $ LogSortCreatedAt Desc
+        parseSort "message"     = Just $ LogSortMessage   Asc 
+        parseSort "-message"    = Just $ LogSortMessage   Desc
+        parseSort _             = Nothing
 
-    _save userId = do
-      d <- jsonData
-      b <- liftIO $ toModel userId d
-      l <- withDB $ DB.insert (b :: Log)
-      status status201
-      json l
+save :: ActM ()
+save = do
+  userId <- getUserId
+  d <- jsonData
+  b <- liftIO $ toModel userId d
+  l <- withDB $ DB.insert (b :: Log)
+  status status201
+  json l
 
-    _update userId = do
-      d <- jsonData
-      b <- liftIO $ toModel userId d
-      i <- param "id"
-      log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
-      case log of
-        Nothing -> raise NotFound
-        Just _  -> withDB $ DB.replace (toKey (i :: Int)) (b :: Log)
+getOne :: ActM ()
+getOne = do
+  userId <- getUserId
+  i   <- param "id"
+  log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
+  maybe (raise NotFound) json log
 
-    _delete userId = do
-      i <- param "id"
-      log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
-      case log of
-        Nothing -> raise NotFound
-        Just _  -> withDB $ DB.delete (toKey (i :: Int) :: DB.Key Log)
+update :: ActM ()
+update = do
+  userId <- getUserId
+  d <- jsonData
+  b <- liftIO $ toModel userId d
+  i <- param "id"
+  log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
+  case log of
+    Nothing -> raise NotFound
+    Just _  -> withDB $ DB.replace (toKey (i :: Int)) (b :: Log)
+
+remove :: ActM ()
+remove = do
+  userId <- getUserId
+  i <- param "id"
+  log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
+  case log of
+    Nothing -> raise NotFound
+    Just _  -> withDB $ DB.delete (toKey (i :: Int) :: DB.Key Log)
 
 toModel :: UserId -> CParam -> IO Log
 toModel userId p = do

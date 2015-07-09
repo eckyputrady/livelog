@@ -20,10 +20,11 @@ import Controllers.Common
 
 routes :: AppM ()
 routes = do
-  post "/users"   $ _save
-  where
-    _save = do
-      b <- jsonDataE
-      l <- withDB (DB.insert (b :: User)) `rescue` (\(Unhandled msg) -> raise $ BadRequest msg)
-      status status201
-      json l
+  post "/users" save
+
+save :: ActM ()
+save = do
+  b <- jsonDataE
+  l <- withDB (DB.insert (b :: User)) `rescue` (\(Unhandled msg) -> raise $ BadRequest msg)
+  status status201
+  json l

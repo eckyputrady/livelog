@@ -24,43 +24,53 @@ instance Aeson.FromJSON CParam
 
 routes :: AppM ()
 routes = do
-  get     "/tags"     $ requireUser >>= _query
-  post    "/tags"     $ requireUser >>= _save
-  get     "/tags/:id" $ requireUser >>= _get
-  put     "/tags/:id" $ requireUser >>= _update
-  delete  "/tags/:id" $ requireUser >>= _delete
-  where
-    _query userId = do
-      (items :: [DB.Entity Tag]) <- withDB $ getFor TagUserId userId
-      json items
+  get     "/tags"     query
+  post    "/tags"     save
+  get     "/tags/:id" getOne
+  put     "/tags/:id" update
+  delete  "/tags/:id" remove
 
-    _get userId = do
-      i   <- param "id"
-      item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
-      maybe (raise NotFound) json item
+query :: ActM ()
+query = do
+  userId <- getUserId
+  (items :: [DB.Entity Tag]) <- withDB $ getFor TagUserId userId
+  json items
 
-    _save userId = do
-      d <- jsonData
-      b <- liftIO $ toModel userId d
-      l <- withDB $ DB.insert (b :: Tag)
-      status status201
-      json l
+getOne :: ActM ()
+getOne = do
+  userId  <- getUserId
+  i       <- param "id"
+  item    <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
+  maybe (raise NotFound) json item
 
-    _update userId = do
-      d <- jsonData
-      b <- liftIO $ toModel userId d
-      i <- param "id"
-      item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
-      case item of
-        Nothing -> raise NotFound
-        Just _  -> withDB $ DB.replace (toKey (i :: Int)) (b :: Tag)
+save :: ActM ()
+save = do
+  userId <- getUserId
+  d <- jsonData
+  b <- liftIO $ toModel userId d
+  l <- withDB $ DB.insert (b :: Tag)
+  status status201
+  json l
 
-    _delete userId = do
-      i <- param "id"
-      item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
-      case item of
-        Nothing -> raise NotFound
-        Just _  -> withDB $ DB.delete (toKey (i :: Int) :: DB.Key Tag)
+update :: ActM ()
+update = do
+  userId <- getUserId
+  d <- jsonData
+  b <- liftIO $ toModel userId d
+  i <- param "id"
+  item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
+  case item of
+    Nothing -> raise NotFound
+    Just _  -> withDB $ DB.replace (toKey (i :: Int)) (b :: Tag)
+
+remove :: ActM ()
+remove = do
+  userId <- getUserId
+  i <- param "id"
+  item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
+  case item of
+    Nothing -> raise NotFound
+    Just _  -> withDB $ DB.delete (toKey (i :: Int) :: DB.Key Tag)
 
 toModel :: UserId -> CParam -> IO Tag
 toModel userId p = return $ Tag userId (name p)

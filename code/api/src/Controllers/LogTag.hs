@@ -24,55 +24,28 @@ instance Aeson.FromJSON CParam
 
 routes :: AppM ()
 routes = do
-  tagLogRoutes
-  logRoutes
-  tagRoutes
+  get     "/logs/:logId/tags"         queryTags
+  post    "/logs/:logId/tags/:tagId"  save
+  delete  "/logs/:logId/tags/:tagId"  remove
 
-tagLogRoutes :: AppM ()
-tagLogRoutes =
-  post  "/taglog" $ requireUser >>= _save
-  where
-    _save userId = do
-      d <- jsonData
-      let _logId = toKey . logId $ d
-      let _tagId = toKey . tagId $ d
-      log <- withDB $ getUserItem LogUserId userId LogId _logId
-      tag <- withDB $ getUserItem TagUserId userId TagId _tagId
-      case (log, tag) of
-        (Nothing, _) -> raise $ BadRequest "log not found"
-        (_, Nothing) -> raise $ BadRequest "tag not found"
-        (_, _) -> do  _save' (toModel userId d) _logId _tagId
-                      status status201
+  get     "/tags/:tagId/logs"         queryLogs
+  post    "/tags/:tagId/logs/:logId"  save
+  delete  "/tags/:tagId/logs/:logId"  remove
 
-    _save' model logId tagId = do 
-      tagLog <- withDB $ getUserItem TagLogTagId tagId TagLogLogId logId
-      case tagLog of
-        Nothing -> do withDB $ DB.insert model
-                      withDB $ getUserItem TagLogTagId tagId TagLogLogId logId
-        Just _  -> return tagLog
+queryLogs = do
+  userId <- getUserId
+  i <- param "tagId"
+  results <- withDB $ queryLogTags userId Nothing (Just (toKey (i :: Int)))
+  json $ map (\(log, _, _) -> log) results
 
-logRoutes :: AppM ()
-logRoutes = do
-  get     "/logs/:logId/tags"         $ requireUser >>= _query
-  delete  "/logs/:logId/tags/:tagId"  $ requireUser >>= delLogTag
-  where
-    _query userId = do
-      i <- param "logId"
-      results <- withDB $ queryLogTags userId (Just (toKey (i :: Int))) Nothing
-      json $ map (\(_, _, tag) -> tag) results
-      
+queryTags = do
+  userId <- getUserId
+  i <- param "logId"
+  results <- withDB $ queryLogTags userId (Just (toKey (i :: Int))) Nothing
+  json $ map (\(_, _, tag) -> tag) results
 
-tagRoutes :: AppM ()
-tagRoutes = do
-  get     "/tags/:tagId/logs"         $ requireUser >>= _query
-  delete  "/tags/:tagId/logs/:logId"  $ requireUser >>= delLogTag
-  where
-    _query userId = do
-      i <- param "tagId"
-      results <- withDB $ queryLogTags userId Nothing (Just (toKey (i :: Int)))
-      json $ map (\(log, _, _) -> log) results
-
-delLogTag userId = do
+remove = do
+  userId <- getUserId
   logId <- param "logId"
   tagId <- param "tagId"
   let logKey = toKey (logId :: Int)
@@ -82,6 +55,28 @@ delLogTag userId = do
   case (log, tag) of
     (Just _, Just _) -> withDB $ delLogTags logKey tagKey
     _ -> raise NotFound
+
+save = do
+  userId <- getUserId
+  logId <- param "logId"
+  tagId <- param "tagId"
+  let logKey = toKey (logId :: Int)
+  let tagKey = toKey (tagId :: Int)
+  log <- withDB $ getUserItem LogUserId userId LogId logKey
+  tag <- withDB $ getUserItem TagUserId userId TagId tagKey
+  case (log, tag) of
+    (Nothing, _)  -> raise $ BadRequest "log not found"
+    (_, Nothing)  -> raise $ BadRequest "tag not found"
+    (_, _)        -> do _save' logKey tagKey
+                        status status201
+
+  where
+    _save' logId tagId = do 
+      tagLog <- withDB $ getUserItem TagLogTagId tagId TagLogLogId logId
+      case tagLog of
+        Nothing -> do withDB $ DB.insert $ TagLog tagId logId
+                      withDB $ getUserItem TagLogTagId tagId TagLogLogId logId
+        Just _  -> return tagLog
 
 toModel :: UserId -> CParam -> TagLog
 toModel userId p = TagLog (toKey . tagId $ p) (toKey . logId $ p)
