@@ -2,21 +2,21 @@
 
 module Controllers.Common where
 
-import Control.Monad.Trans (lift)
-import Control.Monad.Reader (asks)
-import Control.Monad.IO.Class (liftIO)
-import Database.Persist.Sql (runSqlPool, toSqlKey)
-import qualified Database.Persist as DB
-import Web.Scotty.Trans
-import qualified Data.Vault.Lazy as Vault
-import Network.Wai (vault)
-import Data.Serialize (decode)
-import Network.HTTP.Types (status404)
-import Data.Text.Lazy (Text)
-import Data.Aeson (FromJSON)
+import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.Reader   (asks)
+import           Control.Monad.Trans    (lift)
+import           Data.Aeson             (FromJSON)
+import           Data.Serialize         (decode)
+import           Data.Text.Lazy         (Text)
+import qualified Data.Vault.Lazy        as Vault
+import qualified Database.Persist       as DB
+import           Database.Persist.Sql   (runSqlPool, toSqlKey)
+import           Network.HTTP.Types     (status404)
+import           Network.Wai            (vault)
+import           Web.Scotty.Trans
 
-import Model
-import Types
+import           Model
+import           Types
 
 withDB q = do
   p <- lift $ asks pool
@@ -43,7 +43,7 @@ requireUser :: ActM UserId
 requireUser = do
   (sessionLookup, _) <- getSession
   maybeUId <- liftIO $ sessionLookup "u"
-  case maybeUId of 
+  case maybeUId of
     Nothing -> raise $ Unauthorized "maybeUId is nothing"
     Just v -> case decode v of
       Left _ -> raise $ Unauthorized "Format error"

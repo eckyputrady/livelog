@@ -1,8 +1,9 @@
 module Controllers.Error where
 
-import Types
-import Web.Scotty.Trans
-import Network.HTTP.Types (status400, status404, status500)
+import           Network.HTTP.Types (status400, status404, status500)
+import           Web.Scotty.Trans
+
+import           Types
 
 handler :: AppError -> ActM ()
 handler NotFound = status status404

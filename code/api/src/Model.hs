@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -7,19 +8,18 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE FlexibleInstances          #-}
 
 module Model where
 
-import Data.Maybe (listToMaybe, fromMaybe)
-import Data.Text (Text)
-import Control.Applicative ((<$>))
-import Data.Time (UTCTime)
-import Control.Monad.IO.Class (MonadIO(..))
-import Control.Monad.Trans.Control (MonadBaseControl)
-import Database.Esqueleto
-import Database.Persist.TH
-import GHC.Int (Int64)
+import           Control.Applicative         ((<$>))
+import           Control.Monad.IO.Class      (MonadIO(..))
+import           Control.Monad.Trans.Control (MonadBaseControl)
+import           Data.Maybe                  (fromMaybe, listToMaybe)
+import           Data.Text                   (Text)
+import           Data.Time                   (UTCTime)
+import           Database.Esqueleto
+import           Database.Persist.TH
+import           GHC.Int                     (Int64)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User json
@@ -73,10 +73,10 @@ getUserItem userF userId itemF itemId =
                   limit 1
                   return item
 
-delWithCond xs = 
+delWithCond xs =
   delete $ from $ \item ->
   where_ $ foldr ((&&.) . parseCond item) (val True) xs
-  where 
+  where
     parseCond item (getterF, getterVal) =
       item ^. getterF ==. val getterVal
 
@@ -96,7 +96,7 @@ data LogSaveParam = LogSaveParam
 data SortDirection = Asc | Desc
 
 logQuery :: (MonadIO m) => Key User -> LogFilterParam -> LogSortParam -> SqlPersistT m [Entity Log]
-logQuery userId filterParam sortParam = 
+logQuery userId filterParam sortParam =
   select $ from $ \row -> do
   where_ (userCondition row &&. msgCondition row &&. sinceCondition row)
   limitCondition

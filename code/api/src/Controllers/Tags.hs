@@ -1,22 +1,22 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Controllers.Tags (routes) where
 
-import GHC.Generics
-import qualified Data.Aeson as Aeson
-import Web.Scotty.Trans
-import qualified Database.Persist as DB
-import Database.Persist.Sql (toSqlKey)
-import Network.HTTP.Types (status201)
-import Data.Time
-import Control.Monad.IO.Class (liftIO)
-import Control.Applicative ((<$>))
+import           Control.Applicative    ((<$>))
+import           Control.Monad.IO.Class (liftIO)
+import qualified Data.Aeson             as Aeson
+import           Data.Time
+import qualified Database.Persist       as DB
+import           Database.Persist.Sql   (toSqlKey)
+import           GHC.Generics
+import           Network.HTTP.Types     (status201)
+import           Web.Scotty.Trans
 
-import Types
-import Model
-import Controllers.Common
+import           Controllers.Common
+import           Model
+import           Types
 
 data CParam = CParam { name :: String } deriving (Generic)
 instance Aeson.ToJSON CParam

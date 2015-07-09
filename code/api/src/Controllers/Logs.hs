@@ -1,24 +1,24 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Controllers.Logs (routes) where
 
-import GHC.Generics
-import qualified Data.Aeson as Aeson
-import Web.Scotty.Trans
-import qualified Database.Persist as DB
-import Database.Persist.Sql (toSqlKey)
-import Network.HTTP.Types (status201)
-import Data.Time
-import Control.Monad.IO.Class (liftIO)
-import Control.Applicative ((<$>))
-import Data.Text (splitOn)
-import Data.Maybe (mapMaybe)
+import           Control.Applicative    ((<$>))
+import           Control.Monad.IO.Class (liftIO)
+import qualified Data.Aeson             as Aeson
+import           Data.Maybe             (mapMaybe)
+import           Data.Text              (splitOn)
+import           Data.Time
+import qualified Database.Persist       as DB
+import           Database.Persist.Sql   (toSqlKey)
+import           GHC.Generics
+import           Network.HTTP.Types     (status201)
+import           Web.Scotty.Trans
 
-import Types
-import Model
-import Controllers.Common
+import           Controllers.Common
+import           Model
+import           Types
 
 data CParam = CParam { message :: String, time :: Maybe UTCTime } deriving (Generic)
 instance Aeson.ToJSON CParam
@@ -47,9 +47,9 @@ query = do
         sortParam ps = case maybeParam "sort" ps of
                           Nothing -> []
                           Just p  -> mapMaybe parseSort $ splitOn "," p
-        parseSort "createdAt"   = Just $ LogSortCreatedAt Asc 
+        parseSort "createdAt"   = Just $ LogSortCreatedAt Asc
         parseSort "-createdAt"  = Just $ LogSortCreatedAt Desc
-        parseSort "message"     = Just $ LogSortMessage   Asc 
+        parseSort "message"     = Just $ LogSortMessage   Asc
         parseSort "-message"    = Just $ LogSortMessage   Desc
         parseSort _             = Nothing
 

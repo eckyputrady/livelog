@@ -1,29 +1,29 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings          #-}
 
 module Types where
 
-import GHC.Generics
-import qualified Data.Aeson as Aeson
-import Control.Applicative
-import Control.Monad.Reader (MonadIO, MonadReader, ReaderT)
-import Data.ByteString (ByteString)
-import Data.Text.Lazy (Text, pack)
-import Database.Persist.Sql (ConnectionPool)
-import qualified Data.Vault.Lazy as Vault
-import Network.Wai.Session (Session)
-import Web.Scotty.Trans (ScottyT, ActionT, ScottyError(..))
+import           Control.Applicative
+import           Control.Monad.Reader (MonadIO, MonadReader, ReaderT)
+import qualified Data.Aeson           as Aeson
+import           Data.ByteString      (ByteString)
+import           Data.Text.Lazy       (Text, pack)
+import qualified Data.Vault.Lazy      as Vault
+import           Database.Persist.Sql (ConnectionPool)
+import           GHC.Generics
+import           Network.Wai.Session  (Session)
+import           Web.Scotty.Trans     (ActionT, ScottyError(..), ScottyT)
 
 data RawConfig = RawConfig
-  { dbHost :: String
-  , dbName :: String
-  , dbUsername :: String
-  , dbPassword :: String
+  { dbHost      :: String
+  , dbName      :: String
+  , dbUsername  :: String
+  , dbPassword  :: String
   }
 
 data Config = Config
-  { pool :: ConnectionPool
-  , vaultKey :: Vault.Key (Session IO ByteString ByteString)
+  { pool      :: ConnectionPool
+  , vaultKey  :: Vault.Key (Session IO ByteString ByteString)
   }
 
 newtype ConfigM a = ConfigM

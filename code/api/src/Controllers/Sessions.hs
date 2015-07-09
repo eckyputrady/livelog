@@ -1,23 +1,23 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Controllers.Sessions (routes) where
 
-import GHC.Generics
-import qualified Data.Aeson as Aeson
-import Web.Scotty.Trans
-import Database.Persist.Sql (toSqlKey, fromSqlKey)
-import Network.HTTP.Types (status201)
-import Data.Time
-import Control.Monad.IO.Class (liftIO)
-import Control.Applicative ((<$>))
-import Data.Serialize (encode, decode)
-import qualified Database.Persist as DB
+import           Control.Applicative    ((<$>))
+import           Control.Monad.IO.Class (liftIO)
+import qualified Data.Aeson             as Aeson
+import           Data.Serialize         (decode, encode)
+import           Data.Time
+import qualified Database.Persist       as DB
+import           Database.Persist.Sql   (fromSqlKey, toSqlKey)
+import           GHC.Generics
+import           Network.HTTP.Types     (status201)
+import           Web.Scotty.Trans
 
-import Types
-import Model
-import Controllers.Common
+import           Controllers.Common
+import           Model
+import           Types
 
 data CParam = CParam { name :: String } deriving (Generic)
 instance Aeson.ToJSON CParam
@@ -42,11 +42,11 @@ save = do
   d <- jsonDataE
   user <- withDB $ DB.getByValue (d :: User)
   case user of
-    Nothing -> 
+    Nothing ->
       raise $ BadRequest "user not found"
     Just v -> do
       (_, sessionInsert) <- getSession
-      liftIO . sessionInsert "u" . encode . fromSqlKey . DB.entityKey $ v 
+      liftIO . sessionInsert "u" . encode . fromSqlKey . DB.entityKey $ v
       status status201
 
 remove :: ActM ()
