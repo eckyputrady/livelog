@@ -45,31 +45,18 @@ queryTags = do
   json $ map (\(_, _, tag) -> tag) results
 
 remove = do
-  userId <- getUserId
-  logId <- param "logId"
-  tagId <- param "tagId"
-  let logKey = toKey (logId :: Int)
-  let tagKey = toKey (tagId :: Int)
-  log <- withDB $ getUserItem LogUserId userId LogId logKey
-  tag <- withDB $ getUserItem TagUserId userId TagId tagKey
+  (logKey, log, tagKey, tag) <- getLogTag
   case (log, tag) of
     (Just _, Just _) -> withDB $ delLogTags logKey tagKey
     _ -> raise NotFound
 
 save = do
-  userId <- getUserId
-  logId <- param "logId"
-  tagId <- param "tagId"
-  let logKey = toKey (logId :: Int)
-  let tagKey = toKey (tagId :: Int)
-  log <- withDB $ getUserItem LogUserId userId LogId logKey
-  tag <- withDB $ getUserItem TagUserId userId TagId tagKey
+  (logKey, log, tagKey, tag) <- getLogTag
   case (log, tag) of
     (Nothing, _)  -> raise $ BadRequest "log not found"
     (_, Nothing)  -> raise $ BadRequest "tag not found"
     (_, _)        -> do _save' logKey tagKey
                         status status201
-
   where
     _save' logId tagId = do 
       tagLog <- withDB $ getUserItem TagLogTagId tagId TagLogLogId logId
@@ -77,6 +64,16 @@ save = do
         Nothing -> do withDB $ DB.insert $ TagLog tagId logId
                       withDB $ getUserItem TagLogTagId tagId TagLogLogId logId
         Just _  -> return tagLog
+
+getLogTag = do
+  userId <- getUserId
+  logId <- param "logId"
+  tagId <- param "tagId"
+  let logKey = toKey (logId :: Int) :: DB.Key Log
+  let tagKey = toKey (tagId :: Int) :: DB.Key Tag
+  log <- withDB $ getUserItem LogUserId userId LogId logKey
+  tag <- withDB $ getUserItem TagUserId userId TagId tagKey
+  return (logKey, log, tagKey, tag)
 
 toModel :: UserId -> CParam -> TagLog
 toModel userId p = TagLog (toKey . tagId $ p) (toKey . logId $ p)

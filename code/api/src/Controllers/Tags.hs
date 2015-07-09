@@ -39,38 +39,43 @@ query = do
 getOne :: ActM ()
 getOne = do
   userId  <- getUserId
-  i       <- param "id"
-  item    <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
+  (_, item) <- getTag userId
   maybe (raise NotFound) json item
 
 save :: ActM ()
 save = do
   userId <- getUserId
-  d <- jsonData
-  b <- liftIO $ toModel userId d
-  l <- withDB $ DB.insert (b :: Tag)
+  b <- parseModel userId
+  l <- withDB $ DB.insert b
   status status201
   json l
 
 update :: ActM ()
 update = do
   userId <- getUserId
-  d <- jsonData
-  b <- liftIO $ toModel userId d
-  i <- param "id"
-  item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
+  b <- parseModel userId
+  (key, item) <- getTag userId
   case item of
     Nothing -> raise NotFound
-    Just _  -> withDB $ DB.replace (toKey (i :: Int)) (b :: Tag)
+    Just _  -> withDB $ DB.replace key b
 
 remove :: ActM ()
 remove = do
   userId <- getUserId
-  i <- param "id"
-  item <- withDB $ getUserItem TagUserId userId TagId (toKey (i :: Int))
+  (key, item) <- getTag userId
   case item of
     Nothing -> raise NotFound
-    Just _  -> withDB $ DB.delete (toKey (i :: Int) :: DB.Key Tag)
+    Just _  -> withDB $ DB.delete key
+
+getTag userId = do
+  i <- param "id"
+  let key = toKey (i :: Int)
+  item <- withDB $ getUserItem TagUserId userId TagId key
+  return (key, item)
+
+parseModel userId = do
+  d <- jsonData
+  liftIO $ toModel userId d
 
 toModel :: UserId -> CParam -> IO Tag
 toModel userId p = return $ Tag userId (name p)

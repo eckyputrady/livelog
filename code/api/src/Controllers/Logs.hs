@@ -56,8 +56,7 @@ query = do
 save :: ActM ()
 save = do
   userId <- getUserId
-  d <- jsonData
-  b <- liftIO $ toModel userId d
+  b <- parseModel userId
   l <- withDB $ DB.insert (b :: Log)
   status status201
   json l
@@ -65,29 +64,36 @@ save = do
 getOne :: ActM ()
 getOne = do
   userId <- getUserId
-  i   <- param "id"
-  log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
+  (_, log) <- getLog userId
   maybe (raise NotFound) json log
 
 update :: ActM ()
 update = do
   userId <- getUserId
-  d <- jsonData
-  b <- liftIO $ toModel userId d
-  i <- param "id"
-  log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
+  b <- parseModel userId
+  (key, log) <- getLog userId
   case log of
     Nothing -> raise NotFound
-    Just _  -> withDB $ DB.replace (toKey (i :: Int)) (b :: Log)
+    Just _  -> withDB $ DB.replace key b
 
 remove :: ActM ()
 remove = do
   userId <- getUserId
-  i <- param "id"
-  log <- withDB $ getUserItem LogUserId userId LogId (toKey (i :: Int))
+  (key, log) <- getLog userId
   case log of
     Nothing -> raise NotFound
-    Just _  -> withDB $ DB.delete (toKey (i :: Int) :: DB.Key Log)
+    Just _  -> withDB $ DB.delete key
+
+parseModel userId = do
+  userId <- getUserId
+  d <- jsonData
+  liftIO $ toModel userId d
+
+getLog userId = do
+  i <- param "id"
+  let key = toKey (i :: Int)
+  log <- withDB $ getUserItem LogUserId userId LogId key
+  return (key, log)
 
 toModel :: UserId -> CParam -> IO Log
 toModel userId p = do

@@ -19,7 +19,7 @@ import Model
 import Controllers.Common
 
 routes :: AppM ()
-routes = do
+routes =
   post "/users" save
 
 save :: ActM ()
