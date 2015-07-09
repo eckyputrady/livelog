@@ -4,8 +4,12 @@ case "$1 $2" in
   "dev up")       cd infra/env-dev
                   docker-compose build
                   docker-compose up -d
-                  sleep 1
-                  docker exec -it envdev_dev_1 /bin/bash
+                  ;;
+
+  "dev api")      docker exec -it envdev_apidev_1 /bin/bash
+                  ;;
+
+  "dev client")   docker exec -it envdev_clientdev_1 /bin/bash
                   ;;
 
   "dev down")     cd infra/env-dev

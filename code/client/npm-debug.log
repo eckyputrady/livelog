@@ -1,0 +1,35 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node', '/usr/local/bin/npm', 'run', 'serve' ]
+2 info using npm@2.11.3
+3 info using node@v0.10.39
+4 verbose run-script [ 'preserve', 'serve', 'postserve' ]
+5 info preserve livelog-client@1.0.0
+6 info serve livelog-client@1.0.0
+7 verbose unsafe-perm in lifecycle true
+8 info livelog-client@1.0.0 Failed to exec serve script
+9 verbose stack Error: livelog-client@1.0.0 serve: `webpack-dev-server`
+9 verbose stack Exit status 8
+9 verbose stack     at EventEmitter.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/lifecycle.js:213:16)
+9 verbose stack     at EventEmitter.emit (events.js:98:17)
+9 verbose stack     at ChildProcess.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/spawn.js:24:14)
+9 verbose stack     at ChildProcess.emit (events.js:98:17)
+9 verbose stack     at maybeClose (child_process.js:766:16)
+9 verbose stack     at Process.ChildProcess._handle.onexit (child_process.js:833:5)
+10 verbose pkgid livelog-client@1.0.0
+11 verbose cwd /livelog-client
+12 error Linux 4.0.5-boot2docker
+13 error argv "node" "/usr/local/bin/npm" "run" "serve"
+14 error node v0.10.39
+15 error npm  v2.11.3
+16 error code ELIFECYCLE
+17 error livelog-client@1.0.0 serve: `webpack-dev-server`
+17 error Exit status 8
+18 error Failed at the livelog-client@1.0.0 serve script 'webpack-dev-server'.
+18 error This is most likely a problem with the livelog-client package,
+18 error not with npm itself.
+18 error Tell the author that this fails on your system:
+18 error     webpack-dev-server
+18 error You can get their info via:
+18 error     npm owner ls livelog-client
+18 error There is likely additional logging output above.
+19 verbose exit [ 1, true ]
