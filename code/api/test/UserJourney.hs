@@ -1,16 +1,18 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module UserJourney (spec) where
 
-import           Test.Hspec (describe, it)
+import           Network.HTTP.Types
+import           Network.Wai.Test    (SResponse(simpleHeaders))
+import           Test.Hspec          (describe, it)
 import           Test.Hspec.Wai
 import           Test.Hspec.Wai.JSON
-import Network.HTTP.Types
-import Network.Wai.Test (SResponse(simpleHeaders))
-import Util
+
+import           Util
 
 
-spec = 
+spec =
   it "UserJourney" $ pending
     -- user registers to the application
     -- POST /users {name:"user",pass:"password"}
@@ -23,7 +25,7 @@ spec =
 
     -- after a while, the user do another activity
     -- > POST /logs {message:"replying reddit thread"}
-    
+
     -- the last activity has finished, now he wants to tidy up the logs
     -- > POST /logs {message:"Tidying up logs"}
 

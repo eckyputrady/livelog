@@ -1,11 +1,12 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module Util where
 
+import           Network.HTTP.Types
+import           Network.Wai.Test    (SResponse(simpleHeaders))
 import           Test.Hspec.Wai
 import           Test.Hspec.Wai.JSON
-import Network.HTTP.Types
-import Network.Wai.Test (SResponse(simpleHeaders))
 
 createTestUser = createUser "ecky"
 loginTestUser = loginUser "ecky"

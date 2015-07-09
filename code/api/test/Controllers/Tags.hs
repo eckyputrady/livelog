@@ -1,15 +1,17 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module Controllers.Tags (spec) where
 
-import           Test.Hspec (describe, it)
+import           Control.Applicative
+import           Network.HTTP.Types
+import           Test.Hspec          (describe, it)
 import           Test.Hspec.Wai
 import           Test.Hspec.Wai.JSON
-import Util
-import Network.HTTP.Types
-import Control.Applicative
 
-spec = 
+import           Util
+
+spec =
   describe "Tags" $ do
 
     describe "Unauthorized users" $ do

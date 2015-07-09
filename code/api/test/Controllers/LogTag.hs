@@ -1,15 +1,17 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module Controllers.LogTag (spec) where
 
-import           Test.Hspec (describe, it)
+import           Control.Applicative
+import           Network.HTTP.Types
+import           Test.Hspec          (describe, it)
 import           Test.Hspec.Wai
 import           Test.Hspec.Wai.JSON
-import Util
-import Network.HTTP.Types
-import Control.Applicative
 
-spec = 
+import           Util
+
+spec =
   describe "LogTag" $ do
 
     describe "Unauthorized users" $ do
@@ -68,7 +70,7 @@ spec =
         c <- setupInitialData
         request methodGet "/logs/1/tags" [("Cookie", c)] "" `shouldRespondWith` [json|[{id:1,userId:2,name:"test 1"},{id:2,userId:2,name:"test 2"}]|]
 
-      it "should list logs from a tag properly" $ 
+      it "should list logs from a tag properly" $
         pendingWith "unable to find a better method to check for messages (it has 'current time' value)"
 
 setupInitialData = do

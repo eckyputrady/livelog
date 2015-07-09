@@ -1,19 +1,21 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module Controllers.Logs (spec) where
 
-import           Test.Hspec (describe, it, shouldSatisfy)
+import           Control.Applicative
+import           Data.ByteString.Lazy (toStrict)
+import           Data.Text            (isInfixOf)
+import           Data.Text.Encoding   (decodeUtf8)
+import           Network.HTTP.Types
+import           Network.Wai.Test     (SResponse(simpleBody))
+import           Test.Hspec           (describe, it, shouldSatisfy)
 import           Test.Hspec.Wai
 import           Test.Hspec.Wai.JSON
-import Util
-import Network.HTTP.Types
-import Network.Wai.Test (SResponse(simpleBody))
-import Data.Text.Encoding (decodeUtf8)
-import Data.Text (isInfixOf)
-import Data.ByteString.Lazy (toStrict)
-import Control.Applicative
 
-spec = 
+import           Util
+
+spec =
   describe "Logs" $ do
 
     describe "Unauthorized users" $ do

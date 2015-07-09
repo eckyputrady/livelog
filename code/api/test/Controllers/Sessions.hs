@@ -1,17 +1,18 @@
-{-# LANGUAGE OverloadedStrings, QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module Controllers.Sessions (spec) where
 
-import           Test.Hspec (describe, it)
+import           Control.Applicative
+import           Network.HTTP.Types
+import           Network.Wai.Test    (SResponse(simpleHeaders))
+import           Test.Hspec          (describe, it)
 import           Test.Hspec.Wai
 import           Test.Hspec.Wai.JSON
-import Network.HTTP.Types
-import Network.Wai.Test (SResponse(simpleHeaders))
-import Util
-import Control.Applicative
 
+import           Util
 
-spec = 
+spec =
   describe "Sessions" $ do
     it "creating new session with invalide input should fail" $ do
       post "/sessions" [json|{invalid:"input"}|] `shouldRespondWith` 400
