@@ -21,5 +21,9 @@
     "style-loader": "^0.12.3",
     "url-loader": "^0.5.6",
     "webpack": "^1.10.1"
+  },
+  "dependencies": {
+    "@cycle/core": "^1.0.0",
+    "@cycle/web": "^2.0.0"
   }
 }
