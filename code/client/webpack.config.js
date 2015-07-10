@@ -41,7 +41,10 @@ var config = {
     },
     plugins: [
       new cleanPlugin(['dist']),
-      new htmlWebpackPlugin(),
+      new htmlWebpackPlugin({
+        title: 'Livelog',
+        template: __dirname + '/app/index.html'
+      }),
       new webpack.ProvidePlugin({
         $: 'jquery',
         jQuery: 'jquery',

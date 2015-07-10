@@ -27,6 +27,7 @@
     "@cycle/web": "^2.0.0",
     "hammerjs": "^2.0.4",
     "jquery": "^2.1.4",
+    "lodash": "^3.10.0",
     "materialize-css": "^0.96.1"
   }
 }
