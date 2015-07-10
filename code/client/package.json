@@ -24,6 +24,9 @@
   },
   "dependencies": {
     "@cycle/core": "^1.0.0",
-    "@cycle/web": "^2.0.0"
+    "@cycle/web": "^2.0.0",
+    "hammerjs": "^2.0.4",
+    "jquery": "^2.1.4",
+    "materialize-css": "^0.96.1"
   }
 }

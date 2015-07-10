@@ -1,6 +1,7 @@
 'use strict';
 
 // import Webpack plugins
+var webpack = require('webpack')
 var cleanPlugin = require('clean-webpack-plugin');
 var htmlWebpackPlugin = require('html-webpack-plugin')
 
@@ -40,7 +41,12 @@ var config = {
     },
     plugins: [
       new cleanPlugin(['dist']),
-      new htmlWebpackPlugin()
+      new htmlWebpackPlugin(),
+      new webpack.ProvidePlugin({
+        $: 'jquery',
+        jQuery: 'jquery',
+        'window.jQuery': 'jquery'
+      })
     ],
     devServer: {
       contentBase: __dirname + '/dist',
