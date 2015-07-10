@@ -36,7 +36,6 @@ function main (responses) {
     id :: Int
     message :: String
     createdAt :: DateTime
-    duration :: Millisecs
     tags :: Loadable [Loadable Tag]
   }
   Tag = {
@@ -52,7 +51,7 @@ function main (responses) {
 */
 function defaultModel () {
   return {
-    user: defaultLoadable(null),
+    user: defaultLoadable({}),
     logs: defaultLoadable([]),
     tags: defaultLoadable([]),
     state: 'Logs'
@@ -82,14 +81,46 @@ function view (model) {
 
 function loginView (model) {
   return h('div', [
-    navbar(),
+    navbar(false),
     !model.user.isLoading ? null : h('div.progress', h('div.indeterminate')),
     h('div.container', h('div.section', loginForm('login', model)))
   ]);
 }
 
-function loggedInView () {
-  return [];
+function loggedInView (model) {
+  return h('div', [
+    navbar(true),
+    h('div.container.section', currentLogView(model)),
+    h('div.section', [
+      pastLogsView(model)
+    ])
+  ]);
+}
+
+function pastLogsView (model) {
+  let item = {message: 'Sketching UX', createdAt: new Date(), tags: []};
+  return h('ul.collection.z-depth-1', [
+    logItemView(item),
+    logItemView(item)
+  ]);
+}
+
+function logItemView (item) {
+  return h('li.collection-item.avatar', [
+    h('i.large.material-icons.circle.red', 'done'),
+    h('span.title', item.message),
+    h('p', ['05/04/2015 01:32:12', h('br'), labels()]),
+    h('span.secondary-content', '01:02:05')
+  ]);
+}
+
+function currentLogView (model) {
+  return h('div.row', [
+    h('h1.col.s12.center', '01:32:59'),
+    h('h4.col.s12.center', 'Sketching UX'),
+    h('div.col.s12.center', labels()),
+    h('p.col.s12.center', 'starting 2015-10-04')
+  ]);
 }
 
 function loginForm (formId, model) {
@@ -111,12 +142,64 @@ function loginForm (formId, model) {
   ]));
 }
 
-function navbar () {
+function navbar (withSideNav) {
   return h('nav', [
-    h('div.container.nav-wrapper', {type:'checkbox'}, [
-      h('a.brand-logo', 'LOGO')
+    h('div.container', [
+      withSideNav ? sideNav() : null,
+      h('div.nav-wrapper', [
+        h('a.brand-logo', 'LOGO')
+      ])
     ])
   ]);
+}
+
+function sideNav () {
+  setTimeout(() => $('.button-collapse').sideNav(), 200);
+  return [
+    h('ul#sideNav.side-nav', [
+      h('li', h('a', 'Logs')),
+      h('li', h('a', 'Tags')),
+      h('li.divider'),
+      h('li', h('a', 'Logout'))
+    ]),
+    h('a.button-collapse', {attributes:{'data-activates':'sideNav'}}, h('i.mdi-navigation-menu'))
+  ];
+}
+
+function label (name) {
+  return h('span.teal.lighten-3', {style:{padding:'3px', margin:'2px'}}, name)
+}
+
+function labels () {
+  return [
+    label('haskell'),
+    label('rest'),
+    labelInput()
+  ];
+}
+
+function labelInput () {
+  setTimeout(initDropdown, 200);
+  var randId = 'dropdown-' + new Date().getTime();
+  return h('span', [
+    h('a.dropdown-button.teal.lighten-4', {href:'#', attributes:{'data-activates':randId}, style:{padding:'3px', margin:'2px'}}, '+'),
+    h('ul#' + randId + '.dropdown-content', [
+      h('li', h('a', 'one')),
+      h('li', h('a', 'one')),
+      h('li', h('a', 'one'))
+    ])
+  ]);
+}
+
+function initDropdown () {
+  $('.dropdown-button').dropdown({
+      inDuration: 300,
+      outDuration: 225,
+      constrain_width: false,
+      gutter: 0, // Spacing from edge
+      belowOrigin: false // Displays dropdown below the button
+    }
+  );
 }
 
 /*
@@ -210,28 +293,6 @@ function currentLog () {
   ]);
 }
 
-function labels () {
-  return [
-    label('haskell'),
-    label('rest'),
-    labelInput()
-  ]
-}
-
-function labelInput () {
-  setTimeout(initDropdown, 200);
-  var randId = 'dropdown-' + new Date().getTime();
-  return h('span', [
-    h('a.dropdown-button.teal.lighten-4', {href:'#', attributes:{'data-activates':randId}, style:{padding:'3px', margin:'2px'}}, 'add labels'),
-    h('ul#' + randId + '.dropdown-content', [
-      h('li', h('a.modal-trigger', {href:'#create-tag-modal'}, 'create new tag')),
-      h('li.divider'),
-      h('li', h('a', 'one')),
-      h('li', h('a', 'one')),
-      h('li', h('a', 'one'))
-    ])
-  ]);
-}
 
 function createTagModal () {
   setTimeout(initModal, 200);
@@ -250,17 +311,4 @@ function initModal () {
   $('.modal-trigger').leanModal();
 }
 
-function initDropdown () {
-  $('.dropdown-button').dropdown({
-      inDuration: 300,
-      outDuration: 225,
-      constrain_width: false,
-      gutter: 0, // Spacing from edge
-      belowOrigin: false // Displays dropdown below the button
-    }
-  );
-}
-
-function label (name) {
-  return h('span.teal.lighten-3', {style:{padding:'3px', margin:'2px'}}, name)
-}*/
+*/
