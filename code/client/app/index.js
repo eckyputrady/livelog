@@ -6,6 +6,7 @@ require('npm/materialize-css/bin/materialize.js');
 import Cycle from '@cycle/core';
 import {h, makeDOMDriver} from '@cycle/web';
 import _ from 'lodash';
+import moment from 'moment';
 
 // main
 document.querySelector('body').appendChild(document.createElement('div'));
@@ -92,9 +93,20 @@ function loggedInView (model) {
     navbar(true),
     h('div.container.section', currentLogView(model)),
     h('div.section', [
-      pastLogsView(model)
+      pastLogsView(model),
+      h('div.center', circleLoader(true))
     ])
   ]);
+}
+
+function circleLoader (isActive, size) {
+  let active = isActive ? '.active' : '';
+  let sizeClass = '.' + size;
+  return h('div.preloader-wrapper' + active + sizeClass, h('div.spinner-layer.spinner-blue-only', [
+    h('div.circle-clipper.left', h('div.circle')),
+    h('div.gap-patch', h('div.circle')),
+    h('div.circle-clipper.right', h('div.circle'))
+  ]));
 }
 
 function pastLogsView (model) {
@@ -115,11 +127,22 @@ function logItemView (item) {
 }
 
 function currentLogView (model) {
+  let m = model.logs.sVal[0];
+  let dur = moment.duration(m ? m.duration : 0);
+  let mm = m ? {
+      createdAt: 'starting ' + moment(m.createdAt).format('YYYY/MM/DD hh:mm:ss'),
+      message: m.message,
+      duration: `${m.get('hours')}:${m.get('minutes')}:${m.get('seconds')}`
+    } : {
+      createdAt: '',
+      message: 'You have not logged in anything',
+      duration: `--:--:--`
+    };
   return h('div.row', [
-    h('h1.col.s12.center', '01:32:59'),
-    h('h4.col.s12.center', 'Sketching UX'),
+    h('h1.col.s12.center', mm.duration),
+    h('h4.col.s12.center', mm.message),
     h('div.col.s12.center', labels()),
-    h('p.col.s12.center', 'starting 2015-10-04')
+    h('p.col.s12.center', mm.createdAt)
   ]);
 }
 
@@ -174,7 +197,7 @@ function labels () {
   return [
     label('haskell'),
     label('rest'),
-    labelInput()
+    labelInput(),
   ];
 }
 
