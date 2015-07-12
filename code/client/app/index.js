@@ -53,8 +53,8 @@ function main (responses) {
 function defaultModel () {
   return {
     user: defaultLoadable({}),
-    logs: defaultLoadable([]),
-    tags: defaultLoadable([]),
+    logs: defaultLoadable([defaultLoadable(dummyLogs()), defaultLoadable(dummyLogs())]),
+    tags: defaultLoadable([defaultLoadable(dummyTags()), defaultLoadable(dummyTags())]),
     state: 'Logs'
   };
 }
@@ -65,6 +65,20 @@ function defaultLoadable (val) {
     sVal: val,
     eVal: {}
   };
+}
+function dummyLogs () {
+  return {
+    id: 1,
+    message: 'Dummy log',
+    createdAt: new Date(),
+    tags: defaultLoadable([defaultLoadable(dummyTags()), defaultLoadable(dummyTags()), defaultLoadable(dummyTags())])
+  };
+}
+function dummyTags () {
+  return {
+    id: 1,
+    name: 'Dummy tag'
+  }
 }
 
 // views
@@ -89,12 +103,13 @@ function loginView (model) {
 }
 
 function loggedInView (model) {
+  console.log(model);
   return h('div', [
     navbar(true),
     h('div.container.section', currentLogView(model)),
     h('div.section', [
       pastLogsView(model),
-      h('div.center', circleLoader(true))
+      h('div.center', circleLoader(model.logs.isLoading))
     ])
   ]);
 }
@@ -110,39 +125,38 @@ function circleLoader (isActive, size) {
 }
 
 function pastLogsView (model) {
-  let item = {message: 'Sketching UX', createdAt: new Date(), tags: []};
-  return h('ul.collection.z-depth-1', [
-    logItemView(item),
-    logItemView(item)
-  ]);
+  let logs = model.logs.sVal;
+  return logs.length <= 0 ? [] : h('ul.collection.z-depth-1', _.map(logs, (x) => logItemView(x, model.tags)));
 }
 
-function logItemView (item) {
-  return h('li.collection-item.avatar', [
+function logItemView (logL, tagLsL) {
+  return h('li.collection-item.avatar', {style: {height:'initial'}}, [
     h('i.large.material-icons.circle.red', 'done'),
-    h('span.title', item.message),
-    h('p', ['05/04/2015 01:32:12', h('br'), labels()]),
+    h('span.title', logL.sVal.message),
+    h('p', ['05/04/2015 01:32:12', h('br'), labels(logL.sVal, tagLsL.sVal)]),
     h('span.secondary-content', '01:02:05')
   ]);
 }
 
 function currentLogView (model) {
   let m = model.logs.sVal[0];
-  let dur = moment.duration(m ? m.duration : 0);
+  let dur = moment.duration(m ? m.sVal.duration : 0);
   let mm = m ? {
-      createdAt: 'starting ' + moment(m.createdAt).format('YYYY/MM/DD hh:mm:ss'),
-      message: m.message,
-      duration: `${m.get('hours')}:${m.get('minutes')}:${m.get('seconds')}`
+      createdAt: moment(m.sVal.createdAt).format('YYYY/MM/DD hh:mm:ss'),
+      message: m.sVal.message,
+      duration: `${dur.get('hours')}:${dur.get('minutes')}:${dur.get('seconds')}`,
+      labels: m.sVal.labels
     } : {
-      createdAt: '',
+      createdAt: '-',
       message: 'You have not logged in anything',
-      duration: `--:--:--`
+      duration: `--:--:--`,
+      labels: defaultLoadable([])
     };
   return h('div.row', [
     h('h1.col.s12.center', mm.duration),
     h('h4.col.s12.center', mm.message),
-    h('div.col.s12.center', labels()),
-    h('p.col.s12.center', mm.createdAt)
+    h('div.col.s12.center', m ? labels(m.sVal, model.tags.sVal) : []),
+    h('p.col.s12.center', ['since ', h('b', mm.createdAt)])
   ]);
 }
 
@@ -170,7 +184,7 @@ function navbar (withSideNav) {
     h('div.container', [
       withSideNav ? sideNav() : null,
       h('div.nav-wrapper', [
-        h('a.brand-logo', 'LOGO')
+        h('a.brand-logo', 'LiveLog')
       ])
     ])
   ]);
@@ -189,28 +203,25 @@ function sideNav () {
   ];
 }
 
-function label (name) {
-  return h('span.teal.lighten-3', {style:{padding:'3px', margin:'2px'}}, name)
+function label (tagL) {
+  let {name} = tagL.sVal || {name:''};
+  return h('span.red.accent-1.z-depth-1', {style:{display:'inline-block', padding:'3px', margin:'2px'}}, [
+    name, ' ', h('a', '\u2717')
+  ]);
 }
 
-function labels () {
-  return [
-    label('haskell'),
-    label('rest'),
-    labelInput(),
-  ];
+function labels (log, tagLs) {
+  return [_.map(log.tags.sVal, label), labelInput(log, tagLs)];
 }
 
-function labelInput () {
+function labelInput (log, tagLs) {
   setTimeout(initDropdown, 200);
   var randId = 'dropdown-' + new Date().getTime();
   return h('span', [
-    h('a.dropdown-button.teal.lighten-4', {href:'#', attributes:{'data-activates':randId}, style:{padding:'3px', margin:'2px'}}, '+'),
-    h('ul#' + randId + '.dropdown-content', [
-      h('li', h('a', 'one')),
-      h('li', h('a', 'one')),
-      h('li', h('a', 'one'))
-    ])
+    h('a.dropdown-button.teal.lighten-4.z-depth-1', {href:'#', attributes:{'data-activates':randId}, style:{padding:'5px 10px', margin:'2px'}}, '+'),
+    h('ul#' + randId + '.dropdown-content', _.map(tagLs, (tag) => 
+      h('li', h('a', tag.sVal.name))
+    ))
   ]);
 }
 
