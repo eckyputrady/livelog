@@ -15,15 +15,17 @@ import           Network.Wai.Session  (Session)
 import           Web.Scotty.Trans     (ActionT, ScottyError(..), ScottyT)
 
 data RawConfig = RawConfig
-  { dbHost      :: String
-  , dbName      :: String
-  , dbUsername  :: String
-  , dbPassword  :: String
+  { dbHost          :: String
+  , dbName          :: String
+  , dbUsername      :: String
+  , dbPassword      :: String
+  , staticFilesPath :: String
   }
 
 data Config = Config
   { pool      :: ConnectionPool
   , vaultKey  :: Vault.Key (Session IO ByteString ByteString)
+  , staticPath:: String
   }
 
 newtype ConfigM a = ConfigM

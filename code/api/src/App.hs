@@ -22,6 +22,7 @@ import qualified Data.Vault.Lazy                   as Vault
 import           Network.Wai.Session               (Session, SessionStore, withSession)
 import           Network.Wai.Session.ClientSession (clientsessionStore)
 import           Web.ClientSession                 (getDefaultKey)
+import           Network.Wai.Middleware.Static     (staticPolicy, noDots, (>->), addBase)
 
 import           Controllers.Common
 import qualified Controllers.Error                 as CError
@@ -42,6 +43,7 @@ application mws = do
   defaultHandler CError.handler
 
   -- routes
+  get "/" $ serveFile "/index.html"
   CSessions.routes
   CUsers.routes
   CLogs.routes
@@ -49,13 +51,18 @@ application mws = do
   CLogTag.routes
   notFound $ raise NotFound
 
+serveFile :: String -> ActM ()
+serveFile pathStr = do
+  path <- lift $ asks staticPath
+  file $ path ++ pathStr
+
 runAppIO = run (scottyOptsT (def :: Options))
 
 runApp = run scottyAppT
 
 run runner c = do
   runSqlPool migrateModels (pool c)
-  mws <- sequence [sessionMW c]
+  mws <- sequence [sessionMW c, staticMW c]
   runner runIO $ application mws
   where
     runIO :: ConfigM a -> IO a
@@ -65,4 +72,7 @@ run runner c = do
     sessionMW c = do
       sstore <- clientsessionStore <$> getDefaultKey
       return $ withSession sstore "session" def (vaultKey c)
+
+    staticMW :: Config -> IO Middleware
+    staticMW c = return $ staticPolicy (noDots >-> addBase (staticPath c)) 
 

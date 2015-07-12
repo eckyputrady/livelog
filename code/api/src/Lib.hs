@@ -32,7 +32,7 @@ getConfig = do
   vk <- Vault.newKey
   rawCfg <- readRawConfig
   p <- runNoLoggingT $ createMySQLPool (connInfo rawCfg) 10
-  return Config { pool = p, vaultKey = vk }
+  return Config { pool = p, vaultKey = vk, staticPath = (staticFilesPath rawCfg) }
   where connInfo cfg =
           defaultConnectInfo  { connectDatabase = dbName cfg
                               , connectHost     = dbHost cfg
@@ -41,14 +41,16 @@ getConfig = do
                               }
 
 readRawConfig = do
-  dbName  <- lookupEnv "LIVELOG_DB_NAME"
-  dbUname <- lookupEnv "LIVELOG_DB_USERNAME"
-  dbPassw <- lookupEnv "LIVELOG_DB_PASSWORD"
-  dbHost  <- return . return $ "db"
+  dbName          <- lookupEnv "LIVELOG_DB_NAME"
+  dbUname         <- lookupEnv "LIVELOG_DB_USERNAME"
+  dbPassw         <- lookupEnv "LIVELOG_DB_PASSWORD"
+  dbHost          <- return . return $ "db"
+  staticFilesPath <- lookupEnv "LIVELOG_STATIC_PATH"
   let cfg = RawConfig <$> dbHost
                       <*> dbName
                       <*> dbUname
                       <*> dbPassw
+                      <*> staticFilesPath
   case cfg of
     Nothing -> error "No config found"
     Just v  -> return v

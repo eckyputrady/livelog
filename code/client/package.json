@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "serve": "webpack-dev-server"
+    "serve": "webpack --colors --progress --watch"
   },
   "author": "Ecky Putrady",
   "license": "GPL-3.0",

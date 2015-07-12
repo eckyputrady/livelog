@@ -6,7 +6,7 @@ apidev:
   build: ../haskell-dev
   env_file: env
   volumes:
-    - "../../code/api:/livelog"
+    - "../../code:/livelog"
   ports:
     - "3000:3000"
   links:
@@ -17,7 +17,7 @@ clientdev:
   build: ../client-dev
   env_file: env
   volumes: 
-    - "../../code/client:/livelog-client"
+    - "../../code:/livelog"
   ports:
     - "8080:8080"
   command: sleep infinity
