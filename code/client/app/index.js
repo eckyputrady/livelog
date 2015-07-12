@@ -85,13 +85,6 @@ function dummyTags () {
 
 function view (model) {
   return !model.user.sVal ? loginView(model) : loggedInView(model);
-
-  // return h('div', [
-  //   navbar(),
-  //   content(),
-  //   fab(),
-  //   createTagModal()
-  // ]);
 }
 
 function loginView (model) {
@@ -110,7 +103,8 @@ function loggedInView (model) {
     h('div.section', [
       pastLogsView(model),
       h('div.center', circleLoader(model.logs.isLoading))
-    ])
+    ]),
+    fab()
   ]);
 }
 
@@ -130,11 +124,18 @@ function pastLogsView (model) {
 }
 
 function logItemView (logL, tagLsL) {
+  let m = logL;
+  let dur = moment.duration(m ? m.sVal.duration : 0);
+  let mm = {
+    createdAt: moment(m.sVal.createdAt).format('YYYY/MM/DD hh:mm:ss'),
+    message: m.sVal.message,
+    duration: `${dur.get('hours')}:${dur.get('minutes')}:${dur.get('seconds')}`,
+  }
   return h('li.collection-item.avatar', {style: {height:'initial'}}, [
     h('i.large.material-icons.circle.red', 'done'),
-    h('span.title', logL.sVal.message),
-    h('p', ['05/04/2015 01:32:12', h('br'), labels(logL.sVal, tagLsL.sVal)]),
-    h('span.secondary-content', '01:02:05')
+    h('span.title', mm.message),
+    h('p', [mm.createdAt, h('br'), labels(logL.sVal, tagLsL.sVal)]),
+    h('span.secondary-content', mm.duration)
   ]);
 }
 
@@ -236,15 +237,17 @@ function initDropdown () {
   );
 }
 
-/*
 function fab () {
   return h('div.fixed-action-btn', {style:{bottom:'45px',right:'24px'}}, [
-    h('a.btn-floating.btn-large.waves-effect.waves-light.red',[
-      h('span.material-icons', '+')
+    h('a.btn-floating.btn-large.red', h('i.large.material-icons', 'add')),
+    h('ul', [
+      h('li', h('a.btn-floating.red', h('i.small.material-icons', 'done'))),
+      h('li', h('a.btn-floating.red', h('i.small.material-icons', 'label')))
     ])
   ]);
 }
 
+/*
 function content () {
   return h('div.container', [
     h('div.section', currentLog()),
