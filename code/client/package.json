@@ -24,11 +24,13 @@
   },
   "dependencies": {
     "@cycle/core": "^1.0.0",
+    "@cycle/http": "^1.0.0",
     "@cycle/web": "^2.0.0",
     "hammerjs": "^2.0.4",
     "jquery": "^2.1.4",
     "lodash": "^3.10.0",
     "materialize-css": "^0.96.1",
-    "moment": "^2.10.3"
+    "moment": "^2.10.3",
+    "rx": "^2.5.3"
   }
 }

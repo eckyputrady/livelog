@@ -3,23 +3,24 @@
 require('jquery');
 require('npm/materialize-css/bin/materialize.css');
 require('npm/materialize-css/bin/materialize.js');
-import Cycle from '@cycle/core';
+import {run, Rx} from '@cycle/core';
 import {h, makeDOMDriver} from '@cycle/web';
+import {makeHTTPDriver} from '@cycle/http';
 import _ from 'lodash';
 import moment from 'moment';
 
 // main
 document.querySelector('body').appendChild(document.createElement('div'));
-Cycle.run(main, {
-  DOM: makeDOMDriver('body > div')
+run(main, {
+  DOM: makeDOMDriver('body > div'),
+  HTTP: makeHTTPDriver()
 });
 
 function main (responses) {
+  let actions = intent(responses);
   return {
-    DOM: responses.DOM.get('input', 'change')
-          .map(ev => ev.target.checked)
-          .startWith(defaultModel())
-          .map(view)
+    DOM: view(model(actions)),
+    HTTP: toHTTP(actions)
   };
 }
 
@@ -52,7 +53,7 @@ function main (responses) {
 */
 function defaultModel () {
   return {
-    user: defaultLoadable({}),
+    user: defaultLoadable(null),
     logs: defaultLoadable([defaultLoadable(dummyLogs()), defaultLoadable(dummyLogs())]),
     tags: defaultLoadable([defaultLoadable(dummyTags()), defaultLoadable(dummyTags())]),
     state: 'Logs'
@@ -81,11 +82,82 @@ function dummyTags () {
   }
 }
 
+function model (actions) {
+  let mergedActions = Rx.Observable.merge(
+    actions.register$.map(setHandler(handleRegister)),
+    actions.login$.map(setHandler(handleRegister))
+  );
+  return mergedActions.scan(defaultModel(), (acc, x) => x.__handler(acc, x)).startWith(defaultModel());
+}
+function setHandler (f) {
+  return function _setHandler (x) {
+    x.__handler = f;
+    return x;
+  }
+}
+function handleRegister (model, register) {
+  model.user.isLoading = true;
+  return model;
+}
+
+//// Intent
+/**
+  register$ = {name :: String, pass :: String}
+  login$ = {name :: String, pass :: String}
+  loginRes$ = {succ = {name :: String}, fail :: String}
+*/
+function intent ({DOM, HTTP}) {
+  return {
+    register$: parseLogin(DOM, '#register'),
+    login$: parseLogin(DOM, '#login'),
+    loginRes$: parseLoginRes(HTTP)
+  };
+}
+function parseLogin (DOM, selector) {
+  // setTimeout(() => console.log($('form#login input#username').val()), 200);
+  return DOM.get('form#login ' + selector, 'click').map((e) => {
+    return {
+      name: $('form#login input#username').val(),
+      pass: $('form#login input#password').val()
+    };
+  });
+}
+function parseLoginRes (HTTP) {
+  return HTTP.filter(res$ => res$.request === '/sessions').mergeAll();
+}
+
+// http
+
+function toHTTP (actions) {
+  let ret = Rx.Observable.merge(
+    actions.register$.map(toHTTP_register),
+    actions.login$.map(toHTTP_login)
+  );
+  // ret.forEach((x) => console.log(x));
+  return ret;
+}
+function toHTTP_register (register) {
+  return {
+    method: 'POST',
+    url: '/users',
+    send: register
+  };
+}
+function toHTTP_login (register) {
+  return {
+    method: 'POST',
+    url: '/sessions',
+    send: register
+  };
+}
+
 // views
 
-function view (model) {
-  return !model.user.sVal ? loginView(model) : loggedInView(model);
+function view (model$) {
+  return model$.map((model) => !model.user.sVal ? loginView(model) : loggedInView(model));
 }
+
+// LOGIN
 
 function loginView (model) {
   return h('div', [
@@ -95,8 +167,28 @@ function loginView (model) {
   ]);
 }
 
+function loginForm (formId, model) {
+  var isDisabled = model.user.isLoading ? 'disabled' : '';
+  return h('div.row', h(`form.col.s12#${formId}`, [
+    h('h4', 'Login'),
+    h('div.row', h('div.input-field.col.s12', [
+      h('input#username', {type:'text', disabled:isDisabled}),
+      h('label', 'Username')
+    ])),
+    h('div.row', h('div.input-field.col.s12', [
+      h('input#password', {type:'password', disabled:isDisabled}),
+      h('label', 'Password')
+    ])),
+    h('div.row', [
+      h('div.col.s6', h('a#register.col.s12.btn-flat.waves-effect.waves-teal.' + isDisabled, {disabled:isDisabled}, 'Register')),
+      h('div.col.s6', h('a#login.col.s12.btn.waves-effect.waves-light.' + isDisabled, {disabled:isDisabled}, 'Login'))
+    ])
+  ]));
+}
+
+// LOGGED IN
+
 function loggedInView (model) {
-  console.log(model);
   return h('div', [
     navbar(true),
     h('div.container.section', currentLogView(model)),
@@ -159,25 +251,6 @@ function currentLogView (model) {
     h('div.col.s12.center', m ? labels(m.sVal, model.tags.sVal) : []),
     h('p.col.s12.center', ['since ', h('b', mm.createdAt)])
   ]);
-}
-
-function loginForm (formId, model) {
-  var isDisabled = model.user.isLoading ? 'disabled' : '';
-  return h('div.row', h(`form.col.s12#${formId}`, [
-    h('h4', 'Login'),
-    h('div.row', h('div.input-field.col.s12', [
-      h('input#username', {type:'text', disabled:isDisabled}),
-      h('label', 'Username')
-    ])),
-    h('div.row', h('div.input-field.col.s12', [
-      h('input#password', {type:'password', disabled:isDisabled}),
-      h('label', 'Password')
-    ])),
-    h('div.row', [
-      h('div.col.s6', h('a.col.s12.btn-flat.waves-effect.waves-teal.' + isDisabled, {disabled:isDisabled}, 'Register')),
-      h('div.col.s6', h('a.col.s12.btn.waves-effect.waves-light.' + isDisabled, {disabled:isDisabled}, 'Login'))
-    ])
-  ]));
 }
 
 function navbar (withSideNav) {
@@ -246,106 +319,3 @@ function fab () {
     ])
   ]);
 }
-
-/*
-function content () {
-  return h('div.container', [
-    h('div.section', currentLog()),
-    h('div.section', tabs([
-      {title: 'Logs', content: pastActivities()},
-      {title: 'Tags', content: tags()},
-      {title: 'Stats', content: stats()}
-    ]))
-  ]);
-}
-
-function tags () {
-  return h('div.row', [
-    h('div.col.s12', [
-      h('table', [
-        h('thead', [
-          h('tr', [
-            h('th', 'Tags'),
-          ])
-        ]),
-        h('tbody', [
-          h('tr', [
-            h('td', 'haskell'),
-          ]),
-          h('tr', [
-            h('td', h('input', {type:'text'})),
-          ])
-        ])
-      ])
-    ])
-  ])
-}
-
-function stats () {
-  return [];
-}
-
-function tabs (objs) {
-  setTimeout(() => $('ul.tabs').tabs(), 200);
-  var id = 'tab-' + new Date().getTime();
-  return h('div.row', [
-    h('div.col.s12', [
-      h('ul.tabs.z-depth-1', [
-        _.map(objs, (x, idx) => h('li.tab.col.s4', h('a', {href:'#'+id+idx}, x.title)))
-      ]),
-      _.map(objs, (x, idx) => h('div.#' + id+idx + '.col.s12', x.content))
-    ])
-  ]);
-}
-
-function pastActivities () {
-  return h('div.row', [
-    h('div.col.s12', [
-      h('table', [
-        h('thead', [
-          h('tr', [
-            h('th', 'Message'),
-            h('th', 'Tags'),
-            h('th', 'Duration'),
-          ])
-        ]),
-        h('tbody', [
-          h('tr', [
-            h('td', 'Writing front end code'),
-            h('td', labels()),
-            h('td', '01:00:20')
-          ])
-        ])
-      ])
-    ])
-  ])
-}
-
-function currentLog () {
-  return h('div.row', [
-    h('div.col.s8', h('h2', 'I do this!')),
-    h('div.col.s4.valign-wrapper', h('h2.valign', '12:33:10')),
-    h('div.col.s12'),
-    labels()
-  ]);
-}
-
-
-function createTagModal () {
-  setTimeout(initModal, 200);
-  return h('div#create-tag-modal.modal', [
-    h('div.modal-content', [
-      h('h4', 'Create a New Tag')
-    ]),
-    h('div.modal-footer', [
-      h('a.modal-action.waves-effect.btn-flat', 'Create')
-    ])
-  ]);
-}
-
-function initModal () {
-  console.log('called!');
-  $('.modal-trigger').leanModal();
-}
-
-*/
