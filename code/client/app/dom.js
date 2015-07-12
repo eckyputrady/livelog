@@ -1,8 +1,11 @@
+"use strict";
+
 require('jquery');
 require('npm/materialize-css/bin/materialize.css');
 require('npm/materialize-css/bin/materialize.js');
 import {h, makeDOMDriver} from '@cycle/web';
 import moment from 'moment';
+import _ from 'lodash';
 
 module.exports = {
   input, output, driver
@@ -16,7 +19,7 @@ function driver (selector) {
 
 //// INPUT
 
-function input ({DOM}) {
+function input (DOM) {
   return {
     register$: parseLogin(DOM, '#register'),
     login$: parseLogin(DOM, '#login'),
@@ -24,7 +27,6 @@ function input ({DOM}) {
 }
 
 function parseLogin (DOM, selector) {
-  // setTimeout(() => console.log($('form#login input#username').val()), 200);
   return DOM.get('form#login ' + selector, 'click').map((e) => {
     return {
       name: $('form#login input#username').val(),
@@ -108,7 +110,7 @@ function logItemView (logL, tagLsL) {
     createdAt: moment(m.sVal.createdAt).format('YYYY/MM/DD hh:mm:ss'),
     message: m.sVal.message,
     duration: `${dur.get('hours')}:${dur.get('minutes')}:${dur.get('seconds')}`,
-  }
+  };
   return h('li.collection-item.avatar', {style: {height:'initial'}}, [
     h('i.large.material-icons.circle.red', 'done'),
     h('span.title', mm.message),
@@ -129,7 +131,7 @@ function currentLogView (model) {
       createdAt: '-',
       message: 'You have not logged in anything',
       duration: `--:--:--`,
-      labels: defaultLoadable([])
+      // labels: defaultLoadable([])
     };
   return h('div.row', [
     h('h1.col.s12.center', mm.duration),

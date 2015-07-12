@@ -31,7 +31,7 @@
                                 //   true     : all variables, last function parameter
                                 //   "vars"   : all variables only
                                 //   "strict" : all variables, all function parameters
-    "strict"        : true,     // true: Requires all functions run in ES5 Strict Mode
+    "strict"        : false,     // true: Requires all functions run in ES5 Strict Mode
     "maxparams"     : false,    // {int} Max number of formal params allowed per function
     "maxdepth"      : false,    // {int} Max depth of nested blocks (within functions)
     "maxstatements" : false,    // {int} Max number statements per function
@@ -48,5 +48,5 @@
     "esnext"        : true,     // true: Allow ES.next (ES6) syntax (ex: `const`)
 
     // Custom Globals
-    "globals"       : {}        // additional predefined global variables
+    "globals"       : {"$":false,"document":false,"setTimeout":false}        // additional predefined global variables
 }

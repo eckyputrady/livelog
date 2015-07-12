@@ -1,3 +1,7 @@
+"use strict";
+
+import {Rx} from '@cycle/core';
+
 module.exports = {
   update
 };
@@ -14,10 +18,10 @@ function setHandler (f) {
   return function _setHandler (x) {
     x.__handler = f;
     return x;
-  }
+  };
 }
 
-function handleRegister (model, register) {
+function handleRegister (model) {
   model.user.isLoading = true;
   return model;
 }
@@ -77,7 +81,7 @@ function dummyTags () {
   return {
     id: 1,
     name: 'Dummy tag'
-  }
+  };
 }
 
 //// Intent
