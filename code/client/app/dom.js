@@ -60,11 +60,11 @@ function loginForm (formId, model) {
   return h('div.row', h(`form.col.s12#${formId}`, [
     h('h4', 'Login'),
     h('div.row', h('div.input-field.col.s12', [
-      h('input#username', {type:'text', disabled:isDisabled}),
+      h('input#username', {key: 1, type:'text', disabled:isDisabled}),
       h('label', 'Username')
     ])),
     h('div.row', h('div.input-field.col.s12', [
-      h('input#password', {type:'password', disabled:isDisabled}),
+      h('input#password', {key: 1, type:'password', disabled:isDisabled}),
       h('label', 'Password')
     ])),
     h('div.row', [

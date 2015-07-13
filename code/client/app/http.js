@@ -15,15 +15,24 @@ function driver () {
 
 function input (HTTP$) {
   return {
-    loginRes$: parseLoginRes(HTTP$)
+    loginRes$: parseLoginRes(HTTP$),
+    registerRes$: parseRegisterRes(HTTP$)
   };
 }
 
 function parseLoginRes (HTTP$) {
   let ret = HTTP$
     .filter(x$ => x$.request.url === '/sessions')
-    .mergeAll();
-  ret.forEach(e => console.log(e),e => console.log('>>>>>>>>>>', e))
+    .mergeAll()
+    .catch(e => Rx.Observable.just({fail:e}));
+  return ret;
+}
+
+function parseRegisterRes (HTTP$) {
+  let ret = HTTP$
+    .filter(x$ => x$.request.url === '/users')
+    .mergeAll()
+    .catch(e => Rx.Observable.just({fail:e}));
   return ret;
 }
 
