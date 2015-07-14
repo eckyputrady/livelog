@@ -77,7 +77,7 @@ function applyFx (model) {
 function loginView (model) {
   return h('div', [
     navbar(false),
-    !model.user.isLoading ? null : h('div.progress', h('div.indeterminate')),
+    !model.user.isLoading ? null : h('div.progress', {style:{margin:'0px'}}, h('div.indeterminate')),
     h('div.container', h('div.section', loginForm('login', model)))
   ]);
 }

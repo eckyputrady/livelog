@@ -50,12 +50,12 @@ function update (actions) {
 function defaultModel () {
   return {
     state : defaultState(),
-    sideFx: []
+    sideFx: [{type:'checkLogin'}]
   };
 }
 function defaultState () {
   return {
-    user: defaultLoadable(null),
+    user: defaultLoadable(null, true),
     logs: defaultLoadable([defaultLoadable(dummyLogs()), defaultLoadable(dummyLogs())]),
     tags: defaultLoadable([defaultLoadable(dummyTags()), defaultLoadable(dummyTags())]),
     state: 'Logs',
@@ -87,6 +87,8 @@ function dummyTags () {
 
 function model (actions) {
   let mergedActions = Rx.Observable.merge(
+    Rx.Observable.just(defaultModel()).delay(200),
+
     actions.register$.map(setHandler(handleRegister)),
     actions.registerRes$.map(setHandler(handleRegisterRes)),
 
@@ -98,7 +100,7 @@ function model (actions) {
     actions.logout$.map(setHandler(handleLogout)),
     actions.logoutRes$.map(setHandler(handleLogoutRes))
   );
-  return mergedActions.startWith(defaultModel()).scan(applyHandler);
+  return mergedActions.scan(applyHandler);
 }
 
 //// Handler
