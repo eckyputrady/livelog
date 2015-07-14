@@ -48,5 +48,11 @@
     "esnext"        : true,     // true: Allow ES.next (ES6) syntax (ex: `const`)
 
     // Custom Globals
-    "globals"       : {"$":false,"document":false,"setTimeout":false}        // additional predefined global variables
+    "globals"       : {
+        "$":false,
+        "document":false,
+        "setTimeout":false,
+        "console":false,
+        "Materialize":false
+    }        // additional predefined global variables
 }

@@ -1,5 +1,3 @@
-"use strict";
-
 import {Rx} from '@cycle/core';
 
 module.exports = {

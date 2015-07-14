@@ -1,9 +1,8 @@
-"use strict";
-
 require('jquery');
-import hammerjs from 'hammerjs';
+require('hammerjs');
 require('npm/materialize-css/bin/materialize.css');
 require('npm/materialize-css/bin/materialize.js');
+
 import {h, makeDOMDriver} from '@cycle/web';
 import moment from 'moment';
 import _ from 'lodash';
@@ -28,7 +27,7 @@ function input (DOM) {
 }
 
 function parseLogin (DOM, selector) {
-  return DOM.get('form#login ' + selector, 'click').map((e) => {
+  return DOM.get('form#login ' + selector, 'click').map(() => {
     return {
       name: $('form#login input#username').val(),
       pass: $('form#login input#password').val()
@@ -47,7 +46,7 @@ function output (model$) {
     .map(applyFx)
     .map((model) => {
       model = model.state;
-      return !model.user.sVal ? loginView(model) : loggedInView(model)
+      return !model.user.sVal ? loginView(model) : loggedInView(model);
     });
 }
 

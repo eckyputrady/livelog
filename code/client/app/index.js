@@ -1,5 +1,3 @@
-"use strict";
-
 import {run, Rx} from '@cycle/core';
 import _ from 'lodash';
 
@@ -49,5 +47,5 @@ function trace (prefix) {
   return function _trace (e) {
     console.log(prefix, e);
     return e;
-  }
+  };
 }

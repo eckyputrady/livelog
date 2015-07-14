@@ -1,5 +1,3 @@
-"use strict";
-
 import {makeHTTPDriver} from '@cycle/http';
 import {Rx} from '@cycle/core';
 
@@ -39,11 +37,6 @@ function parseRegisterRes (HTTP$) {
 
 function output (model$) {
   return model$.flatMap(m => m.sideFx).map(act).filter(e => !!e);
-}
-
-function trace (x) {
-  console.log('HTTP', x);
-  return x;
 }
 
 function act (sideFx) {
