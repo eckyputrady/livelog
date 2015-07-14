@@ -1,9 +1,0 @@
-language: haskell
-ghc: 7.8.4
-services:
-  - mysql
-install:
-  - cabal install happy alex
-  - cabal install --only-dependencies --enable-tests
-before_script:
-  - mysql -e 'create database livelog_test;'
