@@ -14,35 +14,44 @@ function driver () {
 // INPUT
 
 function input (HTTP$) {
+  let http$$ = HTTP$.share();
   return {
-    loginRes$: parseLoginRes(HTTP$),
-    registerRes$: parseRegisterRes(HTTP$)
+    loginRes$   : parseLoginRes(http$$),
+    registerRes$: parseRegisterRes(http$$)
   };
 }
 
 function parseLoginRes (HTTP$) {
   let ret = HTTP$
     .filter(x$ => x$.request.url === '/sessions')
-    .mergeAll()
-    .catch(e => Rx.Observable.just({fail:e}));
+    .flatMap(x$ => x$.catch(e => Rx.Observable.just({fail:e.response.body})));
   return ret;
 }
 
 function parseRegisterRes (HTTP$) {
   let ret = HTTP$
     .filter(x$ => x$.request.url === '/users')
-    .mergeAll()
-    .catch(e => Rx.Observable.just({fail:e}));
+    .flatMap(x$ => x$.catch(e => Rx.Observable.just({fail:e.response.body})));
   return ret;
 }
 
 // OUTPUT
 
-function output (actions) {
-  return Rx.Observable.merge(
-    actions.register$.map(register),
-    actions.login$.map(login)
-  );
+function output (model$) {
+  return model$.flatMap(m => m.sideFx).map(act).filter(e => !!e);
+}
+
+function trace (x) {
+  console.log('HTTP', x);
+  return x;
+}
+
+function act (sideFx) {
+  switch(sideFx.type) {
+    case 'login'    : return login(sideFx.data);
+    case 'register' : return register(sideFx.data);
+    default         : return null;
+  }
 }
 
 function register (data) {

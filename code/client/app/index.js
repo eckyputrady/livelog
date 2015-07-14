@@ -8,6 +8,7 @@ let Domain = require('./domain.js');
 let HTTP = require('./http.js');
 
 // main
+console.log('Version 0.0.1');
 document.querySelector('body').appendChild(document.createElement('div'));
 run(main, {
   DOM: DOM.driver('body > div'),
@@ -15,29 +16,38 @@ run(main, {
 });
 
 function main (responses) {
-  let actions = mergeIntents([
-    DOM.input(responses.DOM),
-    HTTP.input(responses.HTTP)
-  ]);
-  logActions(actions);
-  let model$ = Domain.update(actions);
+  return output(update(input(responses)));
+}
+
+function output (model$) {
   return {
     DOM: DOM.output(model$),
-    HTTP: HTTP.output(actions)
+    HTTP: HTTP.output(model$),
   };
 }
 
-function mergeIntents (intents) {
-  let combiner = (acc, x) => _.merge(acc, x, (a,b) => Rx.Observable.merge(a,b));
-  let merged = _.reduce(intents, combiner, {});
-  return _.mapValues(merged, e => e.publish().refCount());
+function update (intents) {
+  return Domain.update(intents).map(trace('model:')).share();
 }
 
-function logActions (actions) {
-  return _.chain(actions)
-          .pairs()
-          .map(xs => xs[1].map(x => {return {type: xs[0], data: x}}))
-          .reduce((a,b) => Rx.Observable.merge(a,b))
-          .value()
-          .forEach(x => console.log('Action:', x));
+function input (responses) {
+  return mergeIntents([
+    DOM.input(responses.DOM),
+    HTTP.input(responses.HTTP)
+  ]);
+}
+
+function mergeIntents (intents) {
+  let flatten = (xs) => _.filter(_.flatten(xs, true));
+  let combiner = (acc, x) => _.merge(acc, x, (a,b) => [a].concat([b]));
+  let merged = _.reduce(intents, combiner, {});
+  let ret = _.mapValues(merged, e => Rx.Observable.merge(flatten(e)).map(trace('intent:')).share());
+  return ret;
+}
+
+function trace (prefix) {
+  return function _trace (e) {
+    console.log(prefix, e);
+    return e;
+  }
 }

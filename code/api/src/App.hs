@@ -54,6 +54,8 @@ application mws = do
 serveFile :: String -> ActM ()
 serveFile pathStr = do
   path <- lift $ asks staticPath
+  -- content <- liftIO . readFile $ path ++ pathStr
+  -- html . pack $ content
   file $ path ++ pathStr
 
 runAppIO = run (scottyOptsT (def :: Options))

@@ -21,6 +21,7 @@ data RawConfig = RawConfig
   , dbPassword      :: String
   , staticFilesPath :: String
   }
+  
 
 data Config = Config
   { pool      :: ConnectionPool

@@ -11,7 +11,8 @@ var config = {
     entry: './index.js',
     output: {
       path: __dirname + '/dist',
-      filename: 'bundle.js'
+      filename: 'bundle.js',
+      hash: true
     },
     resolve: {
       alias: {
@@ -48,7 +49,8 @@ var config = {
       new webpack.ProvidePlugin({
         $: 'jquery',
         jQuery: 'jquery',
-        'window.jQuery': 'jquery'
+        'window.jQuery': 'jquery',
+        Hammer: 'hammerjs'
       })
     ],
     devServer: {

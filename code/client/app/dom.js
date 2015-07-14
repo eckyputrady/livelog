@@ -1,6 +1,7 @@
 "use strict";
 
 require('jquery');
+import hammerjs from 'hammerjs';
 require('npm/materialize-css/bin/materialize.css');
 require('npm/materialize-css/bin/materialize.js');
 import {h, makeDOMDriver} from '@cycle/web';
@@ -42,7 +43,26 @@ function parseLogin (DOM, selector) {
 //// OUTPUT
 
 function output (model$) {
-  return model$.map((model) => !model.user.sVal ? loginView(model) : loggedInView(model));
+  return model$
+    .map(applyFx)
+    .map((model) => {
+      model = model.state;
+      return !model.user.sVal ? loginView(model) : loggedInView(model)
+    });
+}
+
+function applyFx (model) {
+  _.forEach(model.sideFx, x => {
+    switch(x.type) {
+      case 'showInfo': 
+        Materialize.toast(x.data, 4000);
+        break;
+      default:
+        break;
+    }
+  });
+
+  return model;
 }
 
 // LOGIN

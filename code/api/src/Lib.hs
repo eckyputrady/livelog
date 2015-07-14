@@ -44,16 +44,16 @@ readRawConfig = do
   dbName          <- lookupEnv "LIVELOG_DB_NAME"
   dbUname         <- lookupEnv "LIVELOG_DB_USERNAME"
   dbPassw         <- lookupEnv "LIVELOG_DB_PASSWORD"
-  dbHost          <- return . return $ "db"
+  dbHost          <- lookupEnv "LIVELOG_DB_HOST"
   staticFilesPath <- lookupEnv "LIVELOG_STATIC_PATH"
-  let cfg = RawConfig <$> dbHost
-                      <*> dbName
-                      <*> dbUname
-                      <*> dbPassw
-                      <*> staticFilesPath
-  case cfg of
-    Nothing -> error "No config found"
-    Just v  -> return v
+  return $  RawConfig (maybe "localhost" id dbHost)
+                      (maybe "livelog" id dbName)
+                      (maybe "root" id dbUname)
+                      (maybe "" id dbPassw)
+                      (maybe "../client/dist" id staticFilesPath)
+  -- case cfg of
+  --   Nothing -> error "No config found"
+  --   Just v  -> return v
 
 clearDB :: Config -> IO ()
 clearDB c = runSqlPool clearModels (pool c)
