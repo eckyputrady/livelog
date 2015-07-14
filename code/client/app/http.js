@@ -14,14 +14,32 @@ function driver () {
 function input (HTTP$) {
   let http$$ = HTTP$.share();
   return {
-    loginRes$   : parseLoginRes(http$$),
-    registerRes$: parseRegisterRes(http$$)
+    loginRes$     : parseLoginRes(http$$),
+    logoutRes$    : parseLogoutRes(http$$),
+    registerRes$  : parseRegisterRes(http$$),
+    checkLoginRes$: parseCheckLoginRes(http$$)
   };
+}
+
+function parseCheckLoginRes (http$$) {
+  return http$$
+    .filter(x$ => x$.request.url === '/sessions' && x$.request.method === 'GET')
+    .flatMap(x$ => x$
+      .map(e => { return {succ: e}; })
+      .catch(e => Rx.Observable.just({fail:e.response.body}))
+    );
 }
 
 function parseLoginRes (HTTP$) {
   let ret = HTTP$
-    .filter(x$ => x$.request.url === '/sessions')
+    .filter(x$ => x$.request.url === '/sessions' && x$.request.method === 'POST')
+    .flatMap(x$ => x$.catch(e => Rx.Observable.just({fail:e.response.body})));
+  return ret;
+}
+
+function parseLogoutRes (HTTP$) {
+  let ret = HTTP$
+    .filter(x$ => x$.request.url === '/sessions' && x$.request.method === 'DEL')
     .flatMap(x$ => x$.catch(e => Rx.Observable.just({fail:e.response.body})));
   return ret;
 }
@@ -41,10 +59,21 @@ function output (model$) {
 
 function act (sideFx) {
   switch(sideFx.type) {
-    case 'login'    : return login(sideFx.data);
-    case 'register' : return register(sideFx.data);
-    default         : return null;
+    case 'login'      : return login(sideFx.data);
+    case 'logout'     : return logout();
+    case 'register'   : return register(sideFx.data);
+    case 'checkLogin' : return checkLogin(sideFx.data);
+    default           : 
+      console.log('unknown sideFx type:', sideFx.type);
+      return null;
   }
+}
+
+function checkLogin () {
+  return {
+    method: 'GET',
+    url: '/sessions'
+  };
 }
 
 function register (data) {
@@ -60,5 +89,12 @@ function login (data) {
     method: 'POST',
     url: '/sessions',
     send: data
+  };
+}
+
+function logout () {
+  return {
+    method: 'DEL',
+    url: '/sessions'
   };
 }

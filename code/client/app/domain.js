@@ -42,6 +42,7 @@ function update (actions) {
   }
 
   SideEffect= Login name pass 
+            | Logout
             | Register name pass
             | CheckLogin
             | ShowInfo str
@@ -61,9 +62,9 @@ function defaultState () {
     loginForm: {name: '', pass: ''}
   };
 }
-function defaultLoadable (val) {
+function defaultLoadable (val, isLoading) {
   return {
-    isLoading: false,
+    isLoading: isLoading || false,
     isSucc: true,
     sVal: val,
     eVal: {}
@@ -87,11 +88,17 @@ function dummyTags () {
 function model (actions) {
   let mergedActions = Rx.Observable.merge(
     actions.register$.map(setHandler(handleRegister)),
-    actions.login$.map(setHandler(handleLogin)),
     actions.registerRes$.map(setHandler(handleRegisterRes)),
-    actions.loginRes$.map(setHandler(handleLoginRes))
+
+    actions.login$.map(setHandler(handleLogin)),
+    actions.loginRes$.map(setHandler(handleLoginRes)),
+
+    actions.checkLoginRes$.map(setHandler(handleCheckLoginRes)),
+
+    actions.logout$.map(setHandler(handleLogout)),
+    actions.logoutRes$.map(setHandler(handleLogoutRes))
   );
-  return mergedActions.scan(defaultModel(), applyHandler).startWith(defaultModel());
+  return mergedActions.startWith(defaultModel()).scan(applyHandler);
 }
 
 //// Handler
@@ -114,20 +121,42 @@ function handleRegister (model, action) {
 
 function handleLogin (model, action) {
   model.state.user.isLoading = true;
-  model.sideFx = [{type: 'login',data: action}];
+  model.sideFx = [{type: 'login', data: action}];
   return model;
 }
 
 function handleRegisterRes (model, action) {
-  model.state.user.isLoading = false;
+  model.state.user.isLoading = !action.fail;
   model.sideFx = [action.succ ? {type: 'checkLogin'} : {type: 'showInfo', data: action.fail}];
   return model;
 }
 
 function handleLoginRes (model, action) {
+  model.state.user.isLoading = !action.fail;
+  model.state.user.sVal = action.fail ? model.state.user.sVal : action.succ;
+  model.sideFx = action.fail ? [{type: 'showInfo', data: action.fail}] : [{type: 'checkLogin'}];
+  return model;
+}
+
+function handleCheckLoginRes (model, action) {
   model.state.user.isLoading = false;
   model.state.user.sVal = action.fail ? model.state.user.sVal : action.succ;
-  model.sideFx = action.fail ? [{type: 'showInfo', data: action.fail}] : [];
+  model.sideFx = [];
+  return model;
+}
+
+function handleLogout (model) {
+  model.state.user.isLoading = true;
+  model.state.user.sVal = null;
+  model.sideFx = [{type: 'logout'}];
+  return model;
+}
+
+function handleLogoutRes (model, action) {
+  model.state.user.isLoading = false;
+  model.state.user.sVal = null;
+  model.sideFx = [{type: 'showInfo', data: action.fail || 'You\'re logged out!'}];
+  return model;
 }
 
 //// Intent
@@ -137,4 +166,6 @@ function handleLoginRes (model, action) {
   loginRes$ = {succ = {name :: String}, fail :: String}
   registerRes$ = {succ = {name :: String, pass :: String}, fail :: String}
   checkLoginRes$ = {succ = {name :: String}, fail :: String}
+  logout$ = {}
+  logoutRes$ = {suce :: (), fail :: String}
 */

@@ -23,16 +23,21 @@ function input (DOM) {
   return {
     register$: parseLogin(DOM, '#register'),
     login$: parseLogin(DOM, '#login'),
+    logout$: parseLogout(DOM),
   };
 }
 
 function parseLogin (DOM, selector) {
-  return DOM.get('form#login ' + selector, 'click').map(() => {
+  return DOM.get('form#login ' + selector + ':not(.disabled)', 'click').map(() => {
     return {
       name: $('form#login input#username').val(),
       pass: $('form#login input#password').val()
     };
   });
+}
+
+function parseLogout (DOM) {
+  return DOM.get('a#logout', 'click');
 }
 
 
@@ -55,6 +60,9 @@ function applyFx (model) {
     switch(x.type) {
       case 'showInfo': 
         Materialize.toast(x.data, 4000);
+        break;
+      case 'logout':
+        $('.button-collapse').sideNav('hide');
         break;
       default:
         break;
@@ -178,7 +186,7 @@ function sideNav () {
       h('li', h('a', 'Logs')),
       h('li', h('a', 'Tags')),
       h('li.divider'),
-      h('li', h('a', 'Logout'))
+      h('li', h('a#logout', 'Logout'))
     ]),
     h('a.button-collapse', {attributes:{'data-activates':'sideNav'}}, h('i.mdi-navigation-menu'))
   ];
