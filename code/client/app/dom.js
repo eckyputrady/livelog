@@ -190,7 +190,7 @@ function currentLogView (model) {
 function navbar (withSideNav) {
   return h('nav', [
     h('div.container', [
-      withSideNav ? sideNav() : null,
+      sideNav(withSideNav),
       h('div.nav-wrapper', [
         h('a.brand-logo', 'LiveLog')
       ])
@@ -198,8 +198,16 @@ function navbar (withSideNav) {
   ]);
 }
 
-function sideNav () {
-  setTimeout(() => $('.button-collapse').sideNav(), 200);
+let hasSidenavInit = false;
+function initSidenav () {
+  // the sidenav is a stateful operation, you can't add more than once.
+  if (!hasSidenavInit) $('.button-collapse').sideNav();
+  hasSidenavInit = true;
+}
+
+function sideNav (visible) {
+  setTimeout(initSidenav, 200);
+  let extraClass = visible ? '' : '.hide';
   return [
     h('ul#sideNav.side-nav', [
       h('li', h('a', 'Logs')),
@@ -207,7 +215,7 @@ function sideNav () {
       h('li.divider'),
       h('li', h('a#logout', 'Logout'))
     ]),
-    h('a.button-collapse', {attributes:{'data-activates':'sideNav'}}, h('i.mdi-navigation-menu'))
+    h('a.button-collapse' + extraClass, {attributes:{'data-activates':'sideNav'}}, h('i.mdi-navigation-menu'))
   ];
 }
 
@@ -292,13 +300,9 @@ function fab () {
 }
 
 function modals () {
-  setTimeout(initModals, 200);
+  setTimeout(() => $('.modal-trigger').leanModal(), 200);
   return [
     logDialogModal(),
     tagDialogModal()
   ];
-}
-
-function initModals () {
-  $('.modal-trigger').leanModal();
 }
