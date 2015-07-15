@@ -27,6 +27,7 @@ function input (DOM) {
     logout$: parseLogout(DOM),
     createLog$: parseCreateLog(DOM),
     createTag$: parseCreateTag(DOM),
+    changeState$: parseChangeState(DOM)
   };
 }
 
@@ -57,6 +58,15 @@ function parseCreateTag (DOM) {
 
 function parseLogout (DOM) {
   return DOM.get('a#logout', 'click');
+}
+
+function parseChangeState (DOM) {
+  return DOM.get('a#change-state', 'click')
+    .map(e => {
+      return {
+        nextstate: $(e.target).data('nextstate')
+      };
+    });
 }
 
 
@@ -124,14 +134,49 @@ function loginForm (formId, model) {
 function loggedInView (model) {
   return h('div', [
     navbar(true),
+    model.state === 'Logs' ? logsView(model) : tagsView(model),
+    fab(),
+    modals()
+  ]);
+}
+
+// TAGS
+
+function tagsView (model) {
+  return [
+    h('div.row', h('div.col.s12', h('h3', 'Tags'))),
+    h('div', [
+      tagsListing(model),
+      h('div.center', circleLoader(model.tags.isLoading))
+    ])
+  ];
+}
+
+function tagsListing (model) {
+  return h('ul.collection', [
+    _.map(model.tags.sVal, tagItem)
+  ]);
+}
+
+function tagItem (tag) {
+  return h('li.collection-item', [
+    h('div', [
+      tag.sVal.name,
+      h('a.secondary-content', h('i.material-icons', 'delete'))
+    ])
+  ]);
+}
+
+// LOGS
+
+function logsView (model) {
+  return [
     h('div.container.section', currentLogView(model)),
     h('div.section', [
       pastLogsView(model),
       h('div.center', circleLoader(model.logs.isLoading))
-    ]),
-    fab(),
-    modals()
-  ]);
+    ])
+  ];
 }
 
 function circleLoader (isActive, size) {
@@ -210,8 +255,8 @@ function sideNav (visible) {
   let extraClass = visible ? '' : '.hide';
   return [
     h('ul#sideNav.side-nav', [
-      h('li', h('a', 'Logs')),
-      h('li', h('a', 'Tags')),
+      h('li', h('a#change-state', {attributes:{'data-nextState':'Logs'}}, 'Logs')),
+      h('li', h('a#change-state', {attributes:{'data-nextState':'Tags'}}, 'Tags')),
       h('li.divider'),
       h('li', h('a#logout', 'Logout'))
     ]),

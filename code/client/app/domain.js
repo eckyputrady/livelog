@@ -20,7 +20,7 @@ function update (actions) {
     user :: Loadable (Maybe User),
     logs :: Loadable [Loadable Log]
     tags :: Loadable (Map TagKey (Loadable Tag))
-    logTags :: Map LogKey (Loadable TagKey)
+    logTags :: Map LogKey (Loadable [TagKey])
     state :: Logs | Tags
     loginForm :: { name :: String, pass :: String }
     logForm :: { name :: String }
@@ -103,7 +103,9 @@ function model (actions) {
 
     actions.loadTagsRes$.map(setHandler(handleLoadTagsRes)),
 
-    actions.loadLogTagsRes$.map(setHandler(handleLoadLogTagsRes))
+    actions.loadLogTagsRes$.map(setHandler(handleLoadLogTagsRes)),
+
+    actions.changeState$.map(setHandler(handleChangeState))
   ]);
   return mergedActions.scan(applyHandler);
 }
@@ -232,6 +234,17 @@ function handleLoadLogTagsRes (model, action) {
   return model;
 }
 
+function handleChangeState (model, action) {
+  model.state.state = validateNextState(model.state.state, action.nextstate);
+  return model;
+}
+
+function validateNextState (defaultState, nextstate) {
+  return  nextstate === 'Logs' ? nextstate :
+          nextstate === 'Tags' ? nextstate :
+          defaultState;
+}
+
 ////
 
 function processLogs (logs) {
@@ -254,7 +267,7 @@ function processLogTags (initialLogTags, logTags) {
   let lt = logTags;
   return _.merge(
     initialLogTags,
-    _.zipObject([lt.logId, _.pluck(lt.tags, 'id')])
+    _.zipObject([lt.logId, defaultLoadable(_.pluck(lt.tags, 'id'))])
   );
 }
 
