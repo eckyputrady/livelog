@@ -6,6 +6,7 @@ require('npm/materialize-css/bin/materialize.js');
 import {h, makeDOMDriver} from '@cycle/web';
 import moment from 'moment';
 import _ from 'lodash';
+import {Rx} from '@cycle/core';
 
 module.exports = {
   input, output, driver
@@ -65,12 +66,11 @@ function parseLogout (DOM) {
 //// OUTPUT
 
 function output (model$) {
-  return model$
-    .map(applyFx)
-    .map((model) => {
-      model = model.state;
-      return !model.user.sVal ? loginView(model) : loggedInView(model);
-    });
+  let m1 = model$.map(applyFx).map(model => model.state);
+  let m2 = Rx.Observable.interval(1000);
+  return Rx.Observable.combineLatest(m1, m2, (model) => {
+    return !model.user.sVal ? loginView(model) : loggedInView(model);
+  });
 }
 
 function applyFx (model) {
@@ -151,27 +151,27 @@ function pastLogsView (model) {
 
 function logItemView (logL, tagLsL) {
   let m = logL;
-  let dur = moment.duration(m ? m.sVal.duration : 0);
+  let dur = !m ? 0 : (m.sVal.duration || (new Date() - new Date(m.sVal.createdAt)));
   let mm = {
-    createdAt: moment(m.sVal.createdAt).format('YYYY/MM/DD hh:mm:ss'),
+    createdAt: moment(m.sVal.createdAt).format('YYYY/MM/DD HH:mm:ss'),
     message: m.sVal.message,
-    duration: `${dur.get('hours')}:${dur.get('minutes')}:${dur.get('seconds')}`,
+    duration: moment.utc(dur).format('H:mm:ss'),
   };
   return h('li.collection-item.avatar', {style: {height:'initial'}}, [
     h('i.large.material-icons.circle.red', 'done'),
     h('span.title', mm.message),
-    h('p', [mm.createdAt, h('br'), labels(logL.sVal, tagLsL.sVal)]),
+    h('p', [mm.createdAt, h('br'), /*labels(logL.sVal, tagLsL.sVal)*/]),
     h('span.secondary-content', mm.duration)
   ]);
 }
 
 function currentLogView (model) {
   let m = model.logs.sVal[0];
-  let dur = moment.duration(m ? m.sVal.duration : 0);
+  let dur = !m ? 0 : (m.sVal.duration || (new Date() - new Date(m.sVal.createdAt)));
   let mm = m ? {
       createdAt: moment(m.sVal.createdAt).format('YYYY/MM/DD hh:mm:ss'),
       message: m.sVal.message,
-      duration: `${dur.get('hours')}:${dur.get('minutes')}:${dur.get('seconds')}`,
+      duration: moment.utc(dur).format('H:mm:ss'),
       labels: m.sVal.labels
     } : {
       createdAt: '-',
@@ -182,7 +182,7 @@ function currentLogView (model) {
   return h('div.row', [
     h('h1.col.s12.center', mm.duration),
     h('h4.col.s12.center', mm.message),
-    h('div.col.s12.center', m ? labels(m.sVal, model.tags.sVal) : []),
+    // h('div.col.s12.center', m ? labels(m.sVal, model.tags.sVal) : []),
     h('p.col.s12.center', ['since ', h('b', mm.createdAt)])
   ]);
 }

@@ -94,7 +94,7 @@ function loadLogs () {
   return {
     __type: 4,
     method: 'GET',
-    url: '/logs'
+    url: '/logs?sort=-createdAt'
   };
 }
 
