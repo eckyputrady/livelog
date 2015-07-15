@@ -21,6 +21,7 @@ function update (actions) {
     tags :: Loadable [Loadable Tag]
     state :: Logs | Tags
     loginForm :: { name :: String, pass :: String }
+    logForm :: { name :: String }
   }
 
   User = { name :: String }
@@ -45,6 +46,7 @@ function update (actions) {
             | Logout
             | Register name pass
             | CheckLogin
+            | LoadLogs
             | ShowInfo str
 */
 function defaultModel () {
@@ -56,8 +58,8 @@ function defaultModel () {
 function defaultState () {
   return {
     user: defaultLoadable(null, true),
-    logs: defaultLoadable([defaultLoadable(dummyLogs()), defaultLoadable(dummyLogs())]),
-    tags: defaultLoadable([defaultLoadable(dummyTags()), defaultLoadable(dummyTags())]),
+    logs: defaultLoadable([]),
+    tags: defaultLoadable([]),
     state: 'Logs',
     loginForm: {name: '', pass: ''}
   };
@@ -98,7 +100,9 @@ function model (actions) {
     actions.checkLoginRes$.map(setHandler(handleCheckLoginRes)),
 
     actions.logout$.map(setHandler(handleLogout)),
-    actions.logoutRes$.map(setHandler(handleLogoutRes))
+    actions.logoutRes$.map(setHandler(handleLogoutRes)),
+
+    actions.loadLogsRes$.map(setHandler(handleLoadLogsRes))
   );
   return mergedActions.scan(applyHandler);
 }
@@ -142,8 +146,11 @@ function handleLoginRes (model, action) {
 
 function handleCheckLoginRes (model, action) {
   model.state.user.isLoading = false;
-  model.state.user.sVal = action.fail ? model.state.user.sVal : action.succ;
-  model.sideFx = [];
+  let oldUser = model.state.user.sVal;
+  model.state.user.sVal = action.fail ? oldUser : action.succ;
+  model.sideFx = !oldUser ? [{type: 'loadLogs'}] : [];
+  model.state.state = !oldUser ? 'Logs' : model.state.state;
+  model.state.logs.isLoading = true;
   return model;
 }
 
@@ -161,6 +168,17 @@ function handleLogoutRes (model, action) {
   return model;
 }
 
+function handleLoadLogsRes (model, action) {
+  model.state.logs.isLoading = false;
+  if (action.fail) {
+    model.sideFx = [{type: 'showInfo', data: action.fail}];
+  } else {
+    model.state.logs.sVal = _.map(action.succ, defaultLoadable);
+    model.sideFx = [];
+  }
+  return model;
+}
+
 //// Intent
 /**
   register$ = {name :: String, pass :: String}
@@ -169,5 +187,6 @@ function handleLogoutRes (model, action) {
   registerRes$ = {succ = {name :: String, pass :: String}, fail :: String}
   checkLoginRes$ = {succ = {name :: String}, fail :: String}
   logout$ = {}
-  logoutRes$ = {suce :: (), fail :: String}
+  logoutRes$ = {suce :: (), fail :: String},
+  loadLogsRes$ = {succ :: [Log], fail :: String}
 */
