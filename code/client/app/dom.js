@@ -201,7 +201,7 @@ function navbar (withSideNav) {
 let hasSidenavInit = false;
 function initSidenav () {
   // the sidenav is a stateful operation, you can't add more than once.
-  if (!hasSidenavInit) $('.button-collapse').sideNav();
+  if (!hasSidenavInit) { $('.button-collapse').sideNav(); }
   hasSidenavInit = true;
 }
 

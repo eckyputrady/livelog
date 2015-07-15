@@ -19,7 +19,9 @@ function input (HTTP$) {
     registerRes$  : commonParse(register(), http$$),
     checkLoginRes$: commonParse(checkLogin(), http$$),
     loadLogsRes$  : commonParse(loadLogs(), http$$),
-    createLogRes$ : commonParse(createLog(), http$$)
+    createLogRes$ : commonParse(createLog(), http$$),
+    createTagRes$ : commonParse(createTag(), http$$),
+    loadTagsRes$  : commonParse(loadTags(), http$$)
   };
 }
 
@@ -50,6 +52,8 @@ function act (sideFx) {
     case 'checkLogin' : return checkLogin(sideFx.data);
     case 'loadLogs'   : return loadLogs(sideFx.data);
     case 'createLog'  : return createLog(sideFx.data);
+    case 'createTag'  : return createTag(sideFx.data);
+    case 'loadTags'   : return loadTags();
     default           : 
       console.log('unknown sideFx type:', sideFx.type);
       return null;
@@ -104,5 +108,22 @@ function createLog (data) {
     method: 'POST',
     url: '/logs',
     send: data
+  };
+}
+
+function createTag (data) {
+  return {
+    __type: 6,
+    method: 'POST',
+    url: '/tags',
+    send: data
+  };
+}
+
+function loadTags () {
+  return {
+    __type: 7,
+    method: 'GET',
+    url: '/tags'
   };
 }

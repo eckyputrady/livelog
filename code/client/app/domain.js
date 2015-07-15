@@ -19,7 +19,8 @@ function update (actions) {
   State :: {
     user :: Loadable (Maybe User),
     logs :: Loadable [Loadable Log]
-    tags :: Loadable [Loadable Tag]
+    tags :: Loadable (Map TagKey (Loadable Tag))
+    logTags :: Map LogKey (Loadable TagKey)
     state :: Logs | Tags
     loginForm :: { name :: String, pass :: String }
     logForm :: { name :: String }
@@ -30,7 +31,6 @@ function update (actions) {
     id :: Int
     message :: String
     createdAt :: DateTime
-    tags :: Loadable [Loadable Tag]
   }
   Tag = {
     id :: Int
@@ -48,6 +48,9 @@ function update (actions) {
             | Register name pass
             | CheckLogin
             | LoadLogs
+            | CreateTag name
+            | LoadTags
+            | LoadLogTags
             | ShowInfo str
 */
 function defaultModel () {
@@ -93,6 +96,11 @@ function model (actions) {
 
     actions.createLog$.map(setHandler(handleCreateLog)),
     actions.createLogRes$.map(setHandler(handleCreateLogRes)),
+
+    actions.createTag$.map(setHandler(handleCreateTag)),
+    actions.createTagRes$.map(setHandler(handleCreateTagRes)),
+
+    actions.loadTagsRes$.map(setHandler(handleLoadTagsRes))
   ]);
   return mergedActions.scan(applyHandler);
 }
@@ -138,7 +146,7 @@ function handleCheckLoginRes (model, action) {
   model.state.user.isLoading = false;
   let oldUser = model.state.user.sVal;
   model.state.user.sVal = action.fail ? oldUser : action.succ;
-  model.sideFx = !oldUser ? [{type: 'loadLogs'}] : [];
+  model.sideFx = !oldUser ? [{type: 'loadLogs'},{type: 'loadTags'}] : [];
   model.state.state = !oldUser ? 'Logs' : model.state.state;
   model.state.logs.isLoading = true;
   return model;
@@ -176,8 +184,34 @@ function handleCreateLog (model, action) {
 }
 
 function handleCreateLogRes (model, action) {
-  model.state.logs.isLoading = false;
   model.sideFx = action.fail ? [{type: 'showInfo', data: action.fail}] : [{type: 'loadLogs'}];
+  return model;
+}
+
+function handleCreateTag (model, action) {
+  model.sideFx = [{type: 'createTag', data: action}];
+  return model;
+}
+
+function handleCreateTagRes (model, action) {
+  model.sideFx = action.fail ? [{type: 'showInfo', data: action.fail}] : [];
+  return action.fail ? model : handleLoadTags(model);
+}
+
+function handleLoadTags (model) {
+  model.state.tags.isLoading = true;
+  model.sideFx = [{type: 'loadTags'}];
+  return model;
+}
+
+function handleLoadTagsRes (model, action) {
+  model.state.tags.isLoading = false;
+  if (action.succ) {
+    model.state.tags.sVal = processTags(action.succ);
+    model.sideFx = [];
+  } else {
+    model.sideFx = [{type: 'showInfo', data: action.fail}];
+  }
   return model;
 }
 
@@ -191,6 +225,13 @@ function processLogs (logs) {
   return _.map(logs, defaultLoadable);
 }
 
+function processTags (tags) {
+  return _.chain(tags)
+          .map((tag) => [tag.id, defaultLoadable(tag)])
+          .zipObject()
+          .value();
+}
+
 //// Intent
 /**
   register$ = {name :: String, pass :: String}
@@ -201,4 +242,6 @@ function processLogs (logs) {
   logout$ = {}
   logoutRes$ = {suce :: (), fail :: String},
   loadLogsRes$ = {succ :: [Log], fail :: String}
+  createTag = {name :: String}
+  createTagRes$ = {succ :: (), fail :: String} 
 */
