@@ -6,7 +6,7 @@ let Domain = require('./domain.js');
 let HTTP = require('./http.js');
 
 // main
-console.log('Version 0.0.1');
+console.log('Livelog v0.0.1');
 document.querySelector('body').appendChild(document.createElement('div'));
 run(main, {
   DOM: DOM.driver('body > div'),
@@ -25,7 +25,9 @@ function output (model$) {
 }
 
 function update (intents) {
-  return Domain.update(intents).map(trace('model:')).share();
+  let model$ = Domain.update(intents).map(trace('model:')).share();
+  model$.subscribe(() => {}, trace('Err'));
+  return model$;
 }
 
 function input (responses) {

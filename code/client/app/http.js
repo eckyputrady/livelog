@@ -14,15 +14,32 @@ function driver () {
 function input (HTTP$) {
   let http$$ = HTTP$.share();
   return {
-    loginRes$     : commonParse(login(), http$$),
-    logoutRes$    : commonParse(logout(), http$$),
-    registerRes$  : commonParse(register(), http$$),
-    checkLoginRes$: commonParse(checkLogin(), http$$),
-    loadLogsRes$  : commonParse(loadLogs(), http$$),
-    createLogRes$ : commonParse(createLog(), http$$),
-    createTagRes$ : commonParse(createTag(), http$$),
-    loadTagsRes$  : commonParse(loadTags(), http$$)
+    loginRes$       : commonParse(login(), http$$),
+    logoutRes$      : commonParse(logout(), http$$),
+    registerRes$    : commonParse(register(), http$$),
+    checkLoginRes$  : commonParse(checkLogin(), http$$),
+    loadLogsRes$    : commonParse(loadLogs(), http$$),
+    createLogRes$   : commonParse(createLog(), http$$),
+    createTagRes$   : commonParse(createTag(), http$$),
+    loadTagsRes$    : commonParse(loadTags(), http$$),
+    loadLogTagsRes$ : parseLoadLogTags(http$$)
   };
+}
+
+function parseLoadLogTags (http$$) {
+  return http$$
+    .filter(x$ => isMatchReq(loadLogTags(), x$.request))
+    .flatMap(x$ => x$
+      .map(e => {
+        return {
+          succ: {
+            logId: x$.request.__logId,
+            tags: e.body
+          }
+        };
+      })
+      .catch(e => Rx.Observable.just({fail:e.response.body}))
+    );
 }
 
 function commonParse (req, http$$) {
@@ -54,8 +71,9 @@ function act (sideFx) {
     case 'createLog'  : return createLog(sideFx.data);
     case 'createTag'  : return createTag(sideFx.data);
     case 'loadTags'   : return loadTags();
+    case 'loadLogTags': return loadLogTags(sideFx.data);
     default           : 
-      console.log('unknown sideFx type:', sideFx.type);
+      console.log('unknown sideFx:', sideFx);
       return null;
   }
 }
@@ -125,5 +143,14 @@ function loadTags () {
     __type: 7,
     method: 'GET',
     url: '/tags'
+  };
+}
+
+function loadLogTags (data) {
+  return {
+    __type: 8,
+    __logId: data,
+    method: 'GET',
+    url: '/logs/' + data + '/tags'
   };
 }

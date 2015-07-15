@@ -63,7 +63,8 @@ function defaultState () {
   return {
     user: defaultLoadable(null, true),
     logs: defaultLoadable([]),
-    tags: defaultLoadable([]),
+    tags: defaultLoadable({}),
+    logTags: {},
     state: 'Logs',
     loginForm: {name: '', pass: ''}
   };
@@ -100,7 +101,9 @@ function model (actions) {
     actions.createTag$.map(setHandler(handleCreateTag)),
     actions.createTagRes$.map(setHandler(handleCreateTagRes)),
 
-    actions.loadTagsRes$.map(setHandler(handleLoadTagsRes))
+    actions.loadTagsRes$.map(setHandler(handleLoadTagsRes)),
+
+    actions.loadLogTagsRes$.map(setHandler(handleLoadLogTagsRes))
   ]);
   return mergedActions.scan(applyHandler);
 }
@@ -172,9 +175,16 @@ function handleLoadLogsRes (model, action) {
     model.sideFx = [{type: 'showInfo', data: action.fail}];
   } else {
     model.state.logs.sVal = processLogs(action.succ);
-    model.sideFx = [];
+    model.sideFx = _.map(action.succ, loadLogTagsSideFx);
   }
   return model;
+}
+
+function loadLogTagsSideFx (log) {
+  return {
+    type: 'loadLogTags',
+    data: log.id
+  };
 }
 
 function handleCreateLog (model, action) {
@@ -207,11 +217,18 @@ function handleLoadTags (model) {
 function handleLoadTagsRes (model, action) {
   model.state.tags.isLoading = false;
   if (action.succ) {
-    model.state.tags.sVal = processTags(action.succ);
+    model.state.tags.sVal = processTags({}, action.succ);
     model.sideFx = [];
   } else {
     model.sideFx = [{type: 'showInfo', data: action.fail}];
   }
+  return model;
+}
+
+function handleLoadLogTagsRes (model, action) {
+  model.state.tags.sVal = processTags(model.state.tags.sVal, action.succ.tags);
+  model.state.logTags = processLogTags(model.state.logTags, action.succ);
+  model.sideFx = [];
   return model;
 }
 
@@ -225,11 +242,20 @@ function processLogs (logs) {
   return _.map(logs, defaultLoadable);
 }
 
-function processTags (tags) {
-  return _.chain(tags)
-          .map((tag) => [tag.id, defaultLoadable(tag)])
-          .zipObject()
-          .value();
+function processTags (initialTags, tags) {
+  return _.merge(initialTags,  _.chain(tags)
+                                .map((tag) => [tag.id, defaultLoadable(tag)])
+                                .zipObject()
+                                .value()
+                );
+}
+
+function processLogTags (initialLogTags, logTags) {
+  let lt = logTags;
+  return _.merge(
+    initialLogTags,
+    _.zipObject([lt.logId, _.pluck(lt.tags, 'id')])
+  );
 }
 
 //// Intent
