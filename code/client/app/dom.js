@@ -134,6 +134,8 @@ function loginForm (formId, model) {
 // LOGGED IN
 
 function loggedInView (model) {
+  setTimeout(initDropdown, 200); // need stateful initialization ...
+
   return h('div', [
     navbar(true),
     model.state === 'Logs' ? logsView(model) : tagsView(model),
@@ -212,25 +214,29 @@ function logItemView (logL, tagLsL) {
   ]);
 }
 
+function buildLogVM (model, logIdx) {
+  let m = model.logs.sVal[logIdx];
+  return m ? {
+    createdAt : moment(m.sVal.createdAt).format('YYYY/MM/DD hh:mm:ss'),
+    message   : m.sVal.message,
+    duration  : moment.utc(new Date() - new Date(m.sVal.createdAt)).format('H:mm:ss')
+  } : {
+    createdAt : null,
+    message   : 'You haven\'t logged in anything',
+    duration  : '--:--:--'
+  };
+}
+
 function currentLogView (model) {
-  let m = model.logs.sVal[0];
-  let dur = !m ? 0 : (m.sVal.duration || (new Date() - new Date(m.sVal.createdAt)));
-  let mm = m ? {
-      createdAt: moment(m.sVal.createdAt).format('YYYY/MM/DD hh:mm:ss'),
-      message: m.sVal.message,
-      duration: moment.utc(dur).format('H:mm:ss'),
-      labels: m.sVal.labels
-    } : {
-      createdAt: '-',
-      message: 'You have not logged in anything',
-      duration: `--:--:--`,
-      // labels: defaultLoadable([])
-    };
+  let logVM = buildLogVM(model, 0);
   return h('div.row', [
-    h('h1.col.s12.center', mm.duration),
-    h('h4.col.s12.center', mm.message),
-    // h('div.col.s12.center', m ? labels(m.sVal, model.tags.sVal) : []),
-    h('p.col.s12.center', ['since ', h('b', mm.createdAt)])
+    h('h1.col.s12.center', logVM.duration),
+    h('h4.col.s12.center', logVM.message),
+    h('div.col.s12.center', labels(model, 0)),
+    h('p.col.s12.center', logVM.createdAt ? 
+      ['since ', h('b', logVM.createdAt)] :
+      []
+    )
   ]);
 }
 
@@ -273,17 +279,27 @@ function label (tagL) {
   ]);
 }
 
-function labels (log, tagLs) {
-  return [_.map(log.tags.sVal, label), labelInput(log, tagLs)];
+function labels (model, logIdx) {
+  let logL = model.logs.sVal[logIdx];
+  if (!logL) { return []; }
+
+  let taggingsL = model.logTags[logL.sVal.id];
+  let taggings = taggingsL ? taggingsL.sVal : [];
+  let resolvedTags = _.filter(_.map(taggings, (tagId) => model.tags.sVal[tagId]));
+  return [
+    _.map(resolvedTags, label),
+    labelInput(logL.sVal, model.tags.sVal)
+  ];
 }
 
 function labelInput (log, tagLs) {
-  // setTimeout(initDropdown, 200);
-  var randId = 'dropdown-' + new Date().getTime();
+  var dropdownId = 'dropdown-' + log.id;
   return h('span', [
-    h('a.dropdown-button.teal.lighten-4.z-depth-1', {href:'#', attributes:{'data-activates':randId}, style:{padding:'5px 10px', margin:'2px'}}, '+'),
-    h('ul#' + randId + '.dropdown-content', _.map(tagLs, (tag) => 
-      h('li', h('a', tag.sVal.name))
+    h('a.dropdown-button.teal.lighten-4.z-depth-1', {href:'#', attributes:{'data-activates':dropdownId}, style:{padding:'5px 10px', margin:'2px'}}, '+'),
+    h('ul#' + dropdownId + '.dropdown-content', _.map(tagLs, (tag) => 
+      h('li', [
+        h('a', tag.sVal.name)
+      ])
     ))
   ]);
 }
@@ -356,7 +372,7 @@ function modals () {
 
 let hasModalsInit = false;
 function initModals () {
-  if (hasModalsInit) return;
+  if (hasModalsInit) { return; }
   hasModalsInit = true;
-  $('.modal-trigger').leanModal()
+  $('.modal-trigger').leanModal();
 }
