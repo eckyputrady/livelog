@@ -24,6 +24,8 @@ function input (DOM) {
     register$: parseLogin(DOM, '#register'),
     login$: parseLogin(DOM, '#login'),
     logout$: parseLogout(DOM),
+    createLog$: parseCreateLog(DOM),
+    createTag$: parseCreateTag(DOM),
   };
 }
 
@@ -32,6 +34,22 @@ function parseLogin (DOM, selector) {
     return {
       name: $('form#login input#username').val(),
       pass: $('form#login input#password').val()
+    };
+  });
+}
+
+function parseCreateLog (DOM) {
+  return DOM.get('#create-log:not(.disabled)', 'click').map(() => {
+    return {
+      message: $('#create-log-name').val()
+    };
+  });
+}
+
+function parseCreateTag (DOM) {
+  return DOM.get('#create-tag:not(.disabled)', 'click').map(() => {
+    return {
+      name: $('#create-tag-name').val()
     };
   });
 }
@@ -111,7 +129,8 @@ function loggedInView (model) {
       pastLogsView(model),
       h('div.center', circleLoader(model.logs.isLoading))
     ]),
-    fab()
+    fab(),
+    modals()
   ]);
 }
 
@@ -225,12 +244,61 @@ function initDropdown () {
   );
 }
 
+function modal (id, content, footer) {
+  return h('div#' + id + '.modal', [
+    h('div.modal-content', content),
+    h('div.modal-footer', footer)
+  ]);
+}
+
+function logDialogModal () {
+  return modal('log-dialog', [
+    h('h4', 'Log An Activity'),
+    h('form', h('div.row', [
+      h('div.input-field.s12', [
+        h('input#create-log-name', {type:'text'}),
+        h('label', 'Activity name')
+      ])
+    ]))
+  ], [
+    h('a#create-log.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Create'),
+    h('a.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Cancel'),
+  ]);
+}
+
+function tagDialogModal () {
+  return modal('tag-dialog', [
+    h('h4', 'Create Tag'),
+    h('form', [
+      h('div.input-field', [
+        h('input#create-tag-name', {type:'text'}),
+        h('label', 'Tag name')
+      ])
+    ])
+  ], [
+    h('a#create-tag.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Create'),
+    h('a.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Cancel'),
+  ]);
+}
+
 function fab () {
   return h('div.fixed-action-btn', {style:{bottom:'45px',right:'24px'}}, [
     h('a.btn-floating.btn-large.red', h('i.large.material-icons', 'add')),
     h('ul', [
-      h('li', h('a.btn-floating.red', h('i.small.material-icons', 'done'))),
-      h('li', h('a.btn-floating.red', h('i.small.material-icons', 'label')))
+      h('li', h('a.modal-trigger.btn-floating.red', {href:'#log-dialog'}, h('i.small.material-icons', 'done'))),
+      h('li', h('a.modal-trigger.btn-floating.red', {href:'#tag-dialog'}, h('i.small.material-icons', 'label')))
     ])
   ]);
+}
+
+function modals () {
+  setTimeout(initModals, 200);
+  return [
+    logDialogModal(),
+    tagDialogModal()
+  ];
+}
+
+function initModals () {
+  $('.modal-trigger').leanModal();
 }

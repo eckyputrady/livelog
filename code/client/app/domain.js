@@ -1,4 +1,5 @@
 import {Rx} from '@cycle/core';
+import _ from 'lodash';
 
 module.exports = {
   update
@@ -72,23 +73,9 @@ function defaultLoadable (val, isLoading) {
     eVal: {}
   };
 }
-function dummyLogs () {
-  return {
-    id: 1,
-    message: 'Dummy log',
-    createdAt: new Date(),
-    tags: defaultLoadable([defaultLoadable(dummyTags()), defaultLoadable(dummyTags()), defaultLoadable(dummyTags())])
-  };
-}
-function dummyTags () {
-  return {
-    id: 1,
-    name: 'Dummy tag'
-  };
-}
 
 function model (actions) {
-  let mergedActions = Rx.Observable.merge(
+  let mergedActions = Rx.Observable.merge([
     Rx.Observable.just(defaultModel()).delay(200),
 
     actions.register$.map(setHandler(handleRegister)),
@@ -102,8 +89,11 @@ function model (actions) {
     actions.logout$.map(setHandler(handleLogout)),
     actions.logoutRes$.map(setHandler(handleLogoutRes)),
 
-    actions.loadLogsRes$.map(setHandler(handleLoadLogsRes))
-  );
+    actions.loadLogsRes$.map(setHandler(handleLoadLogsRes)),
+
+    actions.createLog$.map(setHandler(handleCreateLog)),
+    actions.createLogRes$.map(setHandler(handleCreateLogRes)),
+  ]);
   return mergedActions.scan(applyHandler);
 }
 
@@ -176,6 +166,18 @@ function handleLoadLogsRes (model, action) {
     model.state.logs.sVal = _.map(action.succ, defaultLoadable);
     model.sideFx = [];
   }
+  return model;
+}
+
+function handleCreateLog (model, action) {
+  model.state.logs.isLoading = true;
+  model.sideFx = [{type: 'createLog', data: action}];
+  return model;
+}
+
+function handleCreateLogRes (model, action) {
+  model.state.logs.isLoading = false;
+  model.sideFx = action.fail ? [{type: 'showInfo', data: action.fail}] : [{type: 'loadLogs'}];
   return model;
 }
 

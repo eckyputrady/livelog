@@ -18,7 +18,8 @@ function input (HTTP$) {
     logoutRes$    : commonParse(logout(), http$$),
     registerRes$  : commonParse(register(), http$$),
     checkLoginRes$: commonParse(checkLogin(), http$$),
-    loadLogsRes$  : commonParse(loadLogs(), http$$)
+    loadLogsRes$  : commonParse(loadLogs(), http$$),
+    createLogRes$ : commonParse(createLog(), http$$)
   };
 }
 
@@ -48,6 +49,7 @@ function act (sideFx) {
     case 'register'   : return register(sideFx.data);
     case 'checkLogin' : return checkLogin(sideFx.data);
     case 'loadLogs'   : return loadLogs(sideFx.data);
+    case 'createLog'  : return createLog(sideFx.data);
     default           : 
       console.log('unknown sideFx type:', sideFx.type);
       return null;
@@ -93,5 +95,14 @@ function loadLogs () {
     __type: 4,
     method: 'GET',
     url: '/logs'
-  }
+  };
+}
+
+function createLog (data) {
+  return {
+    __type: 5,
+    method: 'POST',
+    url: '/logs',
+    send: data
+  };
 }
