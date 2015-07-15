@@ -103,6 +103,8 @@ function applyFx (model) {
 // LOGIN
 
 function loginView (model) {
+  hasModalsInit = false; // due to materialize being stateful 
+
   return h('div', [
     navbar(false),
     !model.user.isLoading ? null : h('div.progress', {style:{margin:'0px'}}, h('div.indeterminate')),
@@ -276,7 +278,7 @@ function labels (log, tagLs) {
 }
 
 function labelInput (log, tagLs) {
-  setTimeout(initDropdown, 200);
+  // setTimeout(initDropdown, 200);
   var randId = 'dropdown-' + new Date().getTime();
   return h('span', [
     h('a.dropdown-button.teal.lighten-4.z-depth-1', {href:'#', attributes:{'data-activates':randId}, style:{padding:'5px 10px', margin:'2px'}}, '+'),
@@ -345,9 +347,16 @@ function fab () {
 }
 
 function modals () {
-  setTimeout(() => $('.modal-trigger').leanModal(), 200);
+  setTimeout(initModals, 200);
   return [
     logDialogModal(),
     tagDialogModal()
   ];
+}
+
+let hasModalsInit = false;
+function initModals () {
+  if (hasModalsInit) return;
+  hasModalsInit = true;
+  $('.modal-trigger').leanModal()
 }
