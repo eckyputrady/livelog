@@ -163,7 +163,7 @@ function handleLoadLogsRes (model, action) {
   if (action.fail) {
     model.sideFx = [{type: 'showInfo', data: action.fail}];
   } else {
-    model.state.logs.sVal = _.map(action.succ, defaultLoadable);
+    model.state.logs.sVal = processLogs(action.succ);
     model.sideFx = [];
   }
   return model;
@@ -179,6 +179,16 @@ function handleCreateLogRes (model, action) {
   model.state.logs.isLoading = false;
   model.sideFx = action.fail ? [{type: 'showInfo', data: action.fail}] : [{type: 'loadLogs'}];
   return model;
+}
+
+////
+
+function processLogs (logs) {
+  _.forEach(logs, (log, idx) => {
+    log.duration = idx <= 0 ? undefined :
+                              (new Date(logs[idx-1].createdAt) - new Date(log.createdAt));
+  });
+  return _.map(logs, defaultLoadable);
 }
 
 //// Intent
