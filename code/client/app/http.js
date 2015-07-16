@@ -22,6 +22,7 @@ function input (HTTP$) {
     createLogRes$     : commonParse(createLog(), http$$),
     createTagRes$     : commonParse(createTag(), http$$),
     createTaggingRes$ : parseCreateTagging(http$$),
+    deleteTaggingRes$ : parseDeleteTagging(http$$),
     loadTagsRes$      : commonParse(loadTags(), http$$),
     loadLogTagsRes$   : parseLoadLogTags(http$$)
   };
@@ -30,6 +31,19 @@ function input (HTTP$) {
 function parseCreateTagging (http$$) {
   return http$$
     .filter(x$ => isMatchReq(createTagging(), x$.request))
+    .flatMap(x$ => x$
+      .map(() => {
+        return {
+          succ: x$.request.__data
+        };
+      })
+      .catch(e => Rx.Observable.just({fail:e.response.body}))
+    );
+}
+
+function parseDeleteTagging (http$$) {
+  return http$$
+    .filter(x$ => isMatchReq(deleteTagging(), x$.request))
     .flatMap(x$ => x$
       .map(() => {
         return {
@@ -87,6 +101,7 @@ function act (sideFx) {
     case 'loadTags'     : return loadTags();
     case 'loadLogTags'  : return loadLogTags(sideFx.data);
     case 'createTagging': return createTagging(sideFx.data);
+    case 'deleteTagging': return deleteTagging(sideFx.data);
     default             : 
       console.log('unknown sideFx:', sideFx);
       return null;
@@ -175,6 +190,15 @@ function createTagging (data) {
     __type: 9,
     __data: data,
     method: 'POST',
+    url: !data ? undefined : ('/logs/' + data.logId + '/tags/' + data.tagId)
+  };
+}
+
+function deleteTagging (data) {
+  return {
+    __type: 10,
+    __data: data,
+    method: 'DEL',
     url: !data ? undefined : ('/logs/' + data.logId + '/tags/' + data.tagId)
   };
 }

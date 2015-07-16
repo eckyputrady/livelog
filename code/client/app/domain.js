@@ -111,6 +111,9 @@ function model (actions) {
     actions.createTagging$.map(setHandler(handleCreateTagging)),
     actions.createTaggingRes$.map(setHandler(handleCreateTaggingRes)),
 
+    actions.deleteTagging$.map(setHandler(handleDeleteTagging)),
+    actions.deleteTaggingRes$.map(setHandler(handleDeleteTaggingRes)),
+
     actions.loadTagsRes$.map(setHandler(handleLoadTagsRes)),
 
     actions.loadLogTagsRes$.map(setHandler(handleLoadLogTagsRes)),
@@ -232,6 +235,15 @@ function handleCreateTaggingRes (model, action) {
   return model;
 }
 
+function handleDeleteTagging (model, action) {
+  model.sideFx = [{type: 'deleteTagging', data: action}];
+  return model;
+}
+
+function handleDeleteTaggingRes (model, action) {
+  return handleCreateTaggingRes(model, action);
+}
+
 function handleLoadTags (model) {
   model.state.tags.isLoading = true;
   model.sideFx = [{type: 'loadTags'}];
@@ -293,7 +305,7 @@ function processLogTags (initialLogTags, logTags) {
   let lt = logTags;
   let newLogTags = {};
   newLogTags[lt.logId] = defaultLoadable(_.pluck(lt.tags, 'id'));
-  return _.merge(initialLogTags, newLogTags);
+  return _.assign(initialLogTags, newLogTags);
 }
 
 //// Intent

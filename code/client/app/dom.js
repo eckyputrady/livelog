@@ -28,7 +28,8 @@ function input (DOM) {
     createLog$: parseCreateLog(DOM),
     createTag$: parseCreateTag(DOM),
     changeState$: parseChangeState(DOM),
-    createTagging$: parseCreateTagging(DOM)
+    createTagging$: parseCreateTagging(DOM),
+    deleteTagging$: parseDeleteTagging(DOM)
   };
 }
 
@@ -59,6 +60,16 @@ function parseCreateTag (DOM) {
 
 function parseCreateTagging (DOM) {
   return DOM.get('#create-tagging', 'click').map(e => {
+    let el = $(e.target);
+    return {
+      logId: el.data('log-id'),
+      tagId: el.data('tag-id')
+    };
+  });
+}
+
+function parseDeleteTagging (DOM) {
+  return DOM.get('#delete-tagging', 'click').map(e => {
     let el = $(e.target);
     return {
       logId: el.data('log-id'),
@@ -284,10 +295,10 @@ function sideNav (visible) {
   ];
 }
 
-function label (tagL) {
-  let {name} = tagL.sVal || {name:''};
-  return h('span.red.accent-1.z-depth-1', {style:{display:'inline-block', padding:'3px', margin:'2px'}}, [
-    name, ' ', h('a', '\u2717')
+function label (logL, tagL) {
+  let {id,name} = tagL.sVal || {id:null,name:''};
+  return h('span.z-depth-1', {style:{display:'inline-block', padding:'3px', margin:'2px'}}, [
+    name, '   ', h('a#delete-tagging', {attributes:{'data-tag-id':id, 'data-log-id':logL.sVal.id}}, '\u2717')
   ]);
 }
 
@@ -297,9 +308,9 @@ function labels (model, logIdx) {
 
   let taggingsL = model.logTags[logL.sVal.id];
   let taggings = taggingsL ? taggingsL.sVal : [];
-  let resolvedTags = _.filter(_.map(taggings, (tagId) => model.tags.sVal[tagId]));
+  let tags = _.filter(_.map(taggings, (tagId) => model.tags.sVal[tagId]));
   return [
-    _.map(resolvedTags, label),
+    _.map(tags, _.curry(label)(logL)),
     labelInput(logL.sVal, model.tags.sVal)
   ];
 }
