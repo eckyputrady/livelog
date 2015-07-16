@@ -137,12 +137,14 @@ function applyHandler (model, action) {
 
 function handleRegister (model, action) {
   model.state.user.isLoading = true;
-  model.sideFx = [{type: 'register',data: action}];
+  model.state.loginForm = action;
+  model.sideFx = [{type: 'register', data: action}];
   return model;
 }
 
 function handleLogin (model, action) {
   model.state.user.isLoading = true;
+  model.state.loginForm = action;
   model.sideFx = [{type: 'login', data: action}];
   return model;
 }
@@ -162,8 +164,13 @@ function handleLoginRes (model, action) {
 
 function handleCheckLoginRes (model, action) {
   model.state.user.isLoading = false;
+  if (action.fail) {
+    model.sideFx = [];
+    return model;
+  }
+
   let oldUser = model.state.user.sVal;
-  model.state.user.sVal = action.fail ? oldUser : action.succ;
+  model.state.user.sVal = action.succ;
   model.sideFx = !oldUser ? [{type: 'loadLogs'},{type: 'loadTags'}] : [];
   model.state.state = !oldUser ? 'Logs' : model.state.state;
   model.state.logs.isLoading = true;
