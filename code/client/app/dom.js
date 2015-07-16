@@ -176,6 +176,7 @@ function loginForm (formId, model) {
 
 function loggedInView (model) {
   setTimeout(initDropdown, 200); // need stateful initialization ...
+  setTimeout(initCollapsible, 200);
 
   return h('div', [
     navbar(true),
@@ -218,7 +219,7 @@ function logsView (model) {
   return [
     h('div.container.section', currentLogView(model)),
     h('div.section', [
-      logGroupsView(model.logGroups),
+      logGroupsView(model),
       h('div.center', circleLoader(model.logs.isLoading))
     ])
   ];
@@ -234,29 +235,31 @@ function circleLoader (isActive, size) {
   ]));
 }
 
-function logGroupsView (logGroups) {
-  return _.map(logGroups, logGroupView);
+function logGroupsView (model) {
+  return _.map(model.logGroups, _.curry(logGroupView)(model));
 }
 
-function logGroupView (logGroup) {
+function logGroupView (model, logGroup) {
   return h('div', [
     h('h5', {style:{'margin-left':'8px'}}, logGroup.date),
-    pastLogsView(logGroup.logs)
+    pastLogsView(model, logGroup.logs)
   ]);
 }
 
-function pastLogsView (logs) {
-  return logs.length <= 0 ? [] : h('ul.collapsible.z-depth-1', {attributes:{'data-collabsible':'accordion'}}, _.map(logs, (x) => logItemView(x)));
+function pastLogsView (model, logs) {
+  return logs.length <= 0 ? [] : h('ul.collapsible.z-depth-1', {attributes:{'data-collabsible':'accordion'}}, _.map(logs, (x) => logItemView(model, x)));
 }
 
-function logItemView (log) {
+function logItemView (model, log) {
   return h('li', [
     h('div.collapsible-header', [
       h('i.material-icons.large' + colorBasedOnTime(log.createdAt), 'album'),
       log.message,
       h('span.right-align', {style:{float:'right'}}, moment(log.createdAt).format('HH:mm'))
     ]),
-    h('div.collapsible-body', 'Isi'),
+    h('div.collapsible-body',
+      h('div', {style:{'margin':'8px','margin-left':'18px'}}, labels(model, log))
+    ),
   ]);
 }
 
@@ -273,12 +276,11 @@ function colorBasedOnTime (date) {
                       '.blue-grey-text.text-darken-3';
 }
 
-function buildLogVM (model, logIdx) {
-  let m = model.logs.sVal[logIdx];
-  return m ? {
-    createdAt : moment(m.sVal.createdAt).format('YYYY/MM/DD hh:mm:ss'),
-    message   : m.sVal.message,
-    duration  : moment.utc(new Date() - new Date(m.sVal.createdAt)).format('H:mm:ss')
+function buildLogVM (model, log) {
+  return log ? {
+    createdAt : moment(log.createdAt).format('YYYY/MM/DD hh:mm:ss'),
+    message   : log.message,
+    duration  : moment.utc(new Date() - new Date(log.createdAt)).format('H:mm:ss')
   } : {
     createdAt : null,
     message   : 'You haven\'t logged in anything',
@@ -287,11 +289,13 @@ function buildLogVM (model, logIdx) {
 }
 
 function currentLogView (model) {
-  let logVM = buildLogVM(model, 0);
+  let logL = model.logs.sVal[0];
+  let log = logL ? logL.sVal : undefined;
+  let logVM = buildLogVM(model, log);
   return h('div.row', [
     h('h1.col.s12.center', logVM.duration),
     h('h4.col.s12.center', logVM.message),
-    h('div.col.s12.center', labels(model, 0)),
+    h('div.col.s12.center', labels(model, log)),
     h('p.col.s12.center', logVM.createdAt ? 
       ['since ', h('b', logVM.createdAt)] :
       []
@@ -331,23 +335,22 @@ function sideNav (visible) {
   ];
 }
 
-function label (logL, tagL) {
+function label (log, tagL) {
   let {id,name} = tagL.sVal || {id:null,name:''};
   return h('span.z-depth-1', {style:{display:'inline-block', padding:'3px', margin:'2px'}}, [
-    name, '   ', h('a#delete-tagging', {attributes:{'data-tag-id':id, 'data-log-id':logL.sVal.id}}, '\u2717')
+    name, '   ', h('a#delete-tagging', {attributes:{'data-tag-id':id, 'data-log-id':log.id}}, '\u2717')
   ]);
 }
 
-function labels (model, logIdx) {
-  let logL = model.logs.sVal[logIdx];
-  if (!logL) { return []; }
+function labels (model, log) {
+  if (!log) { return []; }
 
-  let taggingsL = model.logTags[logL.sVal.id];
+  let taggingsL = model.logTags[log.id];
   let taggings = taggingsL ? taggingsL.sVal : [];
   let tags = _.filter(_.map(taggings, (tagId) => model.tags.sVal[tagId]));
   return [
-    _.map(tags, _.curry(label)(logL)),
-    labelInput(logL.sVal, model.tags.sVal)
+    _.map(tags, _.curry(label)(log)),
+    labelInput(log, model.tags.sVal)
   ];
 }
 
@@ -433,4 +436,8 @@ function initModals () {
   if (hasModalsInit) { return; }
   hasModalsInit = true;
   $('.modal-trigger').leanModal();
+}
+
+function initCollapsible () {
+  $('.collapsible').collapsible();
 }

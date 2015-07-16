@@ -26,7 +26,7 @@ function output (model$) {
 
 function update (intents) {
   let model$ = Domain.update(intents).map(trace('model:')).share();
-  model$.subscribe(() => {}, trace('Err'));
+  model$.subscribe(() => {}, console.log.bind(console));
   return model$;
 }
 
