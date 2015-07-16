@@ -43,17 +43,31 @@ function parseLogin (DOM, selector) {
 }
 
 function parseCreateLog (DOM) {
-  return DOM.get('#create-log:not(.disabled)', 'click').map(() => {
+  let id = '#create-log-name';
+  let btnId = '#create-log';
+  let modalId = '#log-dialog';
+  let clicks = DOM.get(btnId + ':not(.disabled)', 'click');
+  let enters = DOM.get(id, 'keyup').filter(e => e.keyCode === 13).map(() => $(modalId).closeModal());
+  let merged = Rx.Observable.merge(clicks, enters);
+
+  return merged.map(() => {
     return {
-      message: $('#create-log-name').val()
+      message: $(id).val()
     };
   });
 }
 
 function parseCreateTag (DOM) {
-  return DOM.get('#create-tag:not(.disabled)', 'click').map(() => {
+  let id = '#create-tag-name';
+  let btnId = '#create-tag';
+  let modalId = '#tag-dialog';
+  let clicks = DOM.get(btnId + ':not(.disabled)', 'click');
+  let enters = DOM.get(id, 'keyup').filter(e => e.keyCode === 13).map(() => $(modalId).closeModal());
+  let merged = Rx.Observable.merge(clicks, enters);
+
+  return merged.map(() => {
     return {
-      name: $('#create-tag-name').val()
+      name: $(id).val()
     };
   });
 }
@@ -98,11 +112,15 @@ function parseChangeState (DOM) {
 //// OUTPUT
 
 function output (model$) {
-  let m1 = model$.map(applyFx).map(model => model.state);
-  let m2 = Rx.Observable.interval(1000).startWith(0);
-  return Rx.Observable.combineLatest(m1, m2, (model) => {
-    return !model.user.sVal ? loginView(model) : loggedInView(model);
-  });
+  let state$ = model$.map(applyFx).map(model => model.state);
+  let interval$ = Rx.Observable.interval(1000).startWith(0);
+  let modelUpdated$ = Rx.Observable.combineLatest(state$, interval$, state => state);
+  let modelSampled$ = modelUpdated$.sample(1000 / 30); // only draw every 30FPS
+  return modelSampled$.map(render);
+}
+
+function render (state) {
+  return !state.user.sVal ? loginView(state) : loggedInView(state);
 }
 
 function applyFx (model) {
@@ -348,12 +366,12 @@ function modal (id, content, footer) {
 function logDialogModal () {
   return modal('log-dialog', [
     h('h4', 'Log An Activity'),
-    h('form', h('div.row', [
+    h('div.row', [
       h('div.input-field.s12', [
         h('input#create-log-name', {type:'text'}),
         h('label', 'Activity name')
       ])
-    ]))
+    ])
   ], [
     h('a#create-log.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Create'),
     h('a.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Cancel'),

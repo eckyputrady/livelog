@@ -47,7 +47,7 @@ function mergeIntents (intents) {
 
 function trace (prefix) {
   return function _trace (e) {
-    console.log(prefix, e);
+    // console.log(prefix, e);
     return e;
   };
 }
