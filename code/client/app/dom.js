@@ -27,7 +27,8 @@ function input (DOM) {
     logout$: parseLogout(DOM),
     createLog$: parseCreateLog(DOM),
     createTag$: parseCreateTag(DOM),
-    changeState$: parseChangeState(DOM)
+    changeState$: parseChangeState(DOM),
+    createTagging$: parseCreateTagging(DOM)
   };
 }
 
@@ -56,6 +57,16 @@ function parseCreateTag (DOM) {
   });
 }
 
+function parseCreateTagging (DOM) {
+  return DOM.get('#create-tagging', 'click').map(e => {
+    let el = $(e.target);
+    return {
+      logId: el.data('log-id'),
+      tagId: el.data('tag-id')
+    };
+  });
+}
+
 function parseLogout (DOM) {
   return DOM.get('a#logout', 'click');
 }
@@ -77,7 +88,7 @@ function parseChangeState (DOM) {
 
 function output (model$) {
   let m1 = model$.map(applyFx).map(model => model.state);
-  let m2 = Rx.Observable.interval(1000);
+  let m2 = Rx.Observable.interval(1000).startWith(0);
   return Rx.Observable.combineLatest(m1, m2, (model) => {
     return !model.user.sVal ? loginView(model) : loggedInView(model);
   });
@@ -102,6 +113,7 @@ function applyFx (model) {
 
 // LOGIN
 
+let hasModalsInit = false;
 function loginView (model) {
   hasModalsInit = false; // due to materialize being stateful 
 
@@ -298,7 +310,7 @@ function labelInput (log, tagLs) {
     h('a.dropdown-button.teal.lighten-4.z-depth-1', {href:'#', attributes:{'data-activates':dropdownId}, style:{padding:'5px 10px', margin:'2px'}}, '+'),
     h('ul#' + dropdownId + '.dropdown-content', _.map(tagLs, (tag) => 
       h('li', [
-        h('a', tag.sVal.name)
+        h('a#create-tagging', {attributes:{'data-log-id':log.id, 'data-tag-id':tag.sVal.id}}, tag.sVal.name)
       ])
     ))
   ]);
@@ -370,7 +382,6 @@ function modals () {
   ];
 }
 
-let hasModalsInit = false;
 function initModals () {
   if (hasModalsInit) { return; }
   hasModalsInit = true;

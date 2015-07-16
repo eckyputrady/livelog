@@ -14,16 +14,30 @@ function driver () {
 function input (HTTP$) {
   let http$$ = HTTP$.share();
   return {
-    loginRes$       : commonParse(login(), http$$),
-    logoutRes$      : commonParse(logout(), http$$),
-    registerRes$    : commonParse(register(), http$$),
-    checkLoginRes$  : commonParse(checkLogin(), http$$),
-    loadLogsRes$    : commonParse(loadLogs(), http$$),
-    createLogRes$   : commonParse(createLog(), http$$),
-    createTagRes$   : commonParse(createTag(), http$$),
-    loadTagsRes$    : commonParse(loadTags(), http$$),
-    loadLogTagsRes$ : parseLoadLogTags(http$$)
+    loginRes$         : commonParse(login(), http$$),
+    logoutRes$        : commonParse(logout(), http$$),
+    registerRes$      : commonParse(register(), http$$),
+    checkLoginRes$    : commonParse(checkLogin(), http$$),
+    loadLogsRes$      : commonParse(loadLogs(), http$$),
+    createLogRes$     : commonParse(createLog(), http$$),
+    createTagRes$     : commonParse(createTag(), http$$),
+    createTaggingRes$ : parseCreateTagging(http$$),
+    loadTagsRes$      : commonParse(loadTags(), http$$),
+    loadLogTagsRes$   : parseLoadLogTags(http$$)
   };
+}
+
+function parseCreateTagging (http$$) {
+  return http$$
+    .filter(x$ => isMatchReq(createTagging(), x$.request))
+    .flatMap(x$ => x$
+      .map(() => {
+        return {
+          succ: x$.request.__data
+        };
+      })
+      .catch(e => Rx.Observable.just({fail:e.response.body}))
+    );
 }
 
 function parseLoadLogTags (http$$) {
@@ -63,16 +77,17 @@ function output (model$) {
 
 function act (sideFx) {
   switch(sideFx.type) {
-    case 'login'      : return login(sideFx.data);
-    case 'logout'     : return logout();
-    case 'register'   : return register(sideFx.data);
-    case 'checkLogin' : return checkLogin(sideFx.data);
-    case 'loadLogs'   : return loadLogs(sideFx.data);
-    case 'createLog'  : return createLog(sideFx.data);
-    case 'createTag'  : return createTag(sideFx.data);
-    case 'loadTags'   : return loadTags();
-    case 'loadLogTags': return loadLogTags(sideFx.data);
-    default           : 
+    case 'login'        : return login(sideFx.data);
+    case 'logout'       : return logout();
+    case 'register'     : return register(sideFx.data);
+    case 'checkLogin'   : return checkLogin(sideFx.data);
+    case 'loadLogs'     : return loadLogs(sideFx.data);
+    case 'createLog'    : return createLog(sideFx.data);
+    case 'createTag'    : return createTag(sideFx.data);
+    case 'loadTags'     : return loadTags();
+    case 'loadLogTags'  : return loadLogTags(sideFx.data);
+    case 'createTagging': return createTagging(sideFx.data);
+    default             : 
       console.log('unknown sideFx:', sideFx);
       return null;
   }
@@ -152,5 +167,14 @@ function loadLogTags (data) {
     __logId: data,
     method: 'GET',
     url: '/logs/' + data + '/tags'
+  };
+}
+
+function createTagging (data) {
+  return {
+    __type: 9,
+    __data: data,
+    method: 'POST',
+    url: !data ? undefined : ('/logs/' + data.logId + '/tags/' + data.tagId)
   };
 }

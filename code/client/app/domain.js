@@ -1,5 +1,6 @@
 import {Rx} from '@cycle/core';
 import _ from 'lodash';
+import moment from 'moment';
 
 module.exports = {
   update
@@ -22,6 +23,7 @@ function update (actions) {
     tags :: Loadable (Map TagKey (Loadable Tag))
     logTags :: Map LogKey (Loadable [TagKey])
     state :: Logs | Tags
+    groupedLogs :: [LogGroup]
     loginForm :: { name :: String, pass :: String }
     logForm :: { name :: String }
   }
@@ -31,6 +33,10 @@ function update (actions) {
     id :: Int
     message :: String
     createdAt :: DateTime
+  }
+  LogGroup = {
+    date :: String - DD MMMM YYYY
+    logs :: [Log]
   }
   Tag = {
     id :: Int
@@ -51,6 +57,7 @@ function update (actions) {
             | CreateTag name
             | LoadTags
             | LoadLogTags
+            | CreateTagging logId tagId
             | ShowInfo str
 */
 function defaultModel () {
@@ -100,6 +107,9 @@ function model (actions) {
 
     actions.createTag$.map(setHandler(handleCreateTag)),
     actions.createTagRes$.map(setHandler(handleCreateTagRes)),
+
+    actions.createTagging$.map(setHandler(handleCreateTagging)),
+    actions.createTaggingRes$.map(setHandler(handleCreateTaggingRes)),
 
     actions.loadTagsRes$.map(setHandler(handleLoadTagsRes)),
 
@@ -177,6 +187,7 @@ function handleLoadLogsRes (model, action) {
     model.sideFx = [{type: 'showInfo', data: action.fail}];
   } else {
     model.state.logs.sVal = processLogs(action.succ);
+    model.state.logGroups = buildLogGroup(action.succ);
     model.sideFx = _.map(action.succ, loadLogTagsSideFx);
   }
   return model;
@@ -208,6 +219,17 @@ function handleCreateTag (model, action) {
 function handleCreateTagRes (model, action) {
   model.sideFx = action.fail ? [{type: 'showInfo', data: action.fail}] : [];
   return action.fail ? model : handleLoadTags(model);
+}
+
+function handleCreateTagging (model, action) {
+  model.sideFx = [{type: 'createTagging', data: action}];
+  return model;
+}
+
+function handleCreateTaggingRes (model, action) {
+  model.sideFx = action.succ ?  [{type:'loadLogTags', data:action.succ.logId}] :
+                                [{type:'showInfo', data:action.fail}];
+  return model;
 }
 
 function handleLoadTags (model) {
@@ -247,6 +269,10 @@ function validateNextState (defaultState, nextstate) {
 
 ////
 
+function buildLogGroup (logs) {
+  return null; // TODO
+}
+
 function processLogs (logs) {
   _.forEach(logs, (log, idx) => {
     log.duration = idx <= 0 ? undefined :
@@ -265,10 +291,9 @@ function processTags (initialTags, tags) {
 
 function processLogTags (initialLogTags, logTags) {
   let lt = logTags;
-  return _.merge(
-    initialLogTags,
-    _.zipObject([lt.logId, defaultLoadable(_.pluck(lt.tags, 'id'))])
-  );
+  let newLogTags = {};
+  newLogTags[lt.logId] = defaultLoadable(_.pluck(lt.tags, 'id'));
+  return _.merge(initialLogTags, newLogTags);
 }
 
 //// Intent
@@ -282,5 +307,7 @@ function processLogTags (initialLogTags, logTags) {
   logoutRes$ = {suce :: (), fail :: String},
   loadLogsRes$ = {succ :: [Log], fail :: String}
   createTag = {name :: String}
-  createTagRes$ = {succ :: (), fail :: String} 
+  createTagRes$ = {succ :: (), fail :: String}
+  createTagging$ = {logId, tagId} 
+  createTaggingRes$ = {succ :: {logId , tagId}, fail :: String}
 */
