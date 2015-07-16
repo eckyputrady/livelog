@@ -218,7 +218,7 @@ function logsView (model) {
   return [
     h('div.container.section', currentLogView(model)),
     h('div.section', [
-      pastLogsView(model),
+      logGroupsView(model.logGroups),
       h('div.center', circleLoader(model.logs.isLoading))
     ])
   ];
@@ -234,25 +234,43 @@ function circleLoader (isActive, size) {
   ]));
 }
 
-function pastLogsView (model) {
-  let logs = model.logs.sVal;
-  return logs.length <= 0 ? [] : h('ul.collection.z-depth-1', _.map(logs, (x) => logItemView(x, model.tags)));
+function logGroupsView (logGroups) {
+  return _.map(logGroups, logGroupView);
 }
 
-function logItemView (logL, tagLsL) {
-  let m = logL;
-  let dur = !m ? 0 : (m.sVal.duration || (new Date() - new Date(m.sVal.createdAt)));
-  let mm = {
-    createdAt: moment(m.sVal.createdAt).format('YYYY/MM/DD HH:mm:ss'),
-    message: m.sVal.message,
-    duration: moment.utc(dur).format('H:mm:ss'),
-  };
-  return h('li.collection-item.avatar', {style: {height:'initial'}}, [
-    h('i.large.material-icons.circle.red', 'done'),
-    h('span.title', mm.message),
-    h('p', [mm.createdAt, h('br'), /*labels(logL.sVal, tagLsL.sVal)*/]),
-    h('span.secondary-content', mm.duration)
+function logGroupView (logGroup) {
+  return h('div', [
+    h('h5', {style:{'margin-left':'8px'}}, logGroup.date),
+    pastLogsView(logGroup.logs)
   ]);
+}
+
+function pastLogsView (logs) {
+  return logs.length <= 0 ? [] : h('ul.collapsible.z-depth-1', {attributes:{'data-collabsible':'accordion'}}, _.map(logs, (x) => logItemView(x)));
+}
+
+function logItemView (log) {
+  return h('li', [
+    h('div.collapsible-header', [
+      h('i.material-icons.large' + colorBasedOnTime(log.createdAt), 'album'),
+      log.message,
+      h('span.right-align', {style:{float:'right'}}, moment(log.createdAt).format('HH:mm'))
+    ]),
+    h('div.collapsible-body', 'Isi'),
+  ]);
+}
+
+function colorBasedOnTime (date) {
+  let hour = moment(date).get('hour');
+  return  hour < 2  ? '.blue-grey-text.text-darken-3' :
+          hour < 5  ? '.deep-purple-text.text-darken-4' : // purple
+          hour < 7  ? '.deep-orange-text.text-darken-4' :
+          hour < 10 ? '.blue-text.text-lighten-3' : // light - blue
+          hour < 14 ? '.blue-text' : // clear blue
+          hour < 17 ? '.blue-text.text-lighten-3' : // lightblur
+          hour < 19 ? '.deep-orange-text.text-darken-4' : 
+          hour < 22 ? '.deep-purple-text.text-darken-4' : // purple
+                      '.blue-grey-text.text-darken-3';
 }
 
 function buildLogVM (model, logIdx) {

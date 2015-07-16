@@ -23,7 +23,7 @@ function update (actions) {
     tags :: Loadable (Map TagKey (Loadable Tag))
     logTags :: Map LogKey (Loadable [TagKey])
     state :: Logs | Tags
-    groupedLogs :: [LogGroup]
+    logGroups :: [LogGroup]
     loginForm :: { name :: String, pass :: String }
     logForm :: { name :: String }
   }
@@ -197,7 +197,7 @@ function handleLoadLogsRes (model, action) {
     model.sideFx = [{type: 'showInfo', data: action.fail}];
   } else {
     model.state.logs.sVal = processLogs(action.succ);
-    model.state.logGroups = buildLogGroup(action.succ);
+    model.state.logGroups = buildLogGroups(action.succ);
     model.sideFx = _.map(action.succ, loadLogTagsSideFx);
   }
   return model;
@@ -288,8 +288,12 @@ function validateNextState (defaultState, nextstate) {
 
 ////
 
-function buildLogGroup (logs) {
-  return null; // TODO
+function buildLogGroups (logs) {
+  let grouped = _.chain(logs)
+    .groupBy((log) => moment(log.createdAt).format('DD MMMM YYYY'))
+    .map((val, key) => { return {date: key, logs: val}; })
+    .value();
+  return grouped;
 }
 
 function processLogs (logs) {
