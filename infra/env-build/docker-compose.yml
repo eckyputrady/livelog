@@ -6,18 +6,18 @@ apidev:
   build: ../haskell-dev
   env_file: env
   volumes:
-    - "../../code:/livelog"
+    - "../../code/api:/livelog"
   ports:
     - "3000:3000"
   links:
     - db
-  command: /livelog/api/build.sh
+  command: ./build.sh
 
 clientdev:
   build: ../client-dev
   env_file: env
   volumes: 
-    - "../../code:/livelog"
+    - "../../code/client:/livelog"
   ports:
     - "8080:8080"
-  command: "cd /livelog/client/ && npm run build"
+  command: npm run build

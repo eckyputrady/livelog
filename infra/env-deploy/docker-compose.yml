@@ -9,4 +9,3 @@ dev:
     - "80:3000"
   links:
     - db
-  command: /livelog/api/livelog-exe
