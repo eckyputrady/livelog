@@ -10,4 +10,4 @@ dependencies:
 
 test:
   override:
-    - "export $PATH=.:$PATH && ./llg build up"
+    - "export PATH=.:$PATH && ./llg build up"
