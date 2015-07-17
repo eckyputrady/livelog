@@ -6,4 +6,4 @@ EXPOSE 3000
 
 COPY ./livelog /livelog
 
-CMD /livelog/api/dist/livelog/livelog-exe
+CMD /livelog/api/dist/livelog-exe

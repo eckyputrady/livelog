@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "serve": "webpack --colors --progress --watch",
-    "build": "npm install && webpack -p --colors --progress"
+    "build": "npm install && node_modules/webpack/bin/webpack.js -p --colors --progress"
   },
   "author": "Ecky Putrady",
   "license": "GPL-3.0",

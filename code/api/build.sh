@@ -1,10 +1,13 @@
 #! /bin/bash
+cd "$(dirname "$0")"
+
 cat /etc/hosts
 ghc --version
 cabal --version
 
+# cabal sandbox delete
 cabal sandbox init
-# cabal update
+cabal update
 cabal configure
 cabal install --only-dependencies --enable-tests
 cabal test --show-details=streaming
