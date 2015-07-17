@@ -6,8 +6,8 @@ dependencies:
   override:
     - curl -L https://github.com/docker/compose/releases/download/1.3.2/docker-compose-`uname -s`-`uname -m` > ./docker-compose
     - chmod +x ./docker-compose
-    - ./docker-compose --version
+    - $(pwd)/docker-compose --version
 
 test:
   override:
-    - "export PATH=.:$PATH && ./llg build up"
+    - "export PATH=$(pwd):$PATH && ./llg build up"
