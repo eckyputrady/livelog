@@ -21,7 +21,11 @@ case "$1 $2" in
                   docker-compose build
                   docker-compose up
                   docker-compose rm -f
-                  cp -rf ../../code/api/dist/livelog ../haskell-deploy
+                  rm -rf ../haskell-deploy/livelog
+                  mkdir -p ../haskell-deploy/livelog/api/dist
+                  mkdir -p ../haskell-deploy/livelog/client/dist
+                  cp -rf ../../code/api/dist/livelog ../haskell-deploy/livelog/api/dist
+                  cp -rf ../../code/client/dist ../haskell-deploy/livelog/client/dist
                   docker build -t ecky/livelog ../haskell-deploy
                   ;;
 
@@ -30,6 +34,11 @@ case "$1 $2" in
                   ;;
 
   "pkg up")       cd infra/env-build
+                  rm -rf ../haskell-deploy/livelog
+                  mkdir -p ../haskell-deploy/livelog/api/dist
+                  mkdir -p ../haskell-deploy/livelog/client/dist
+                  cp -rf ../../code/api/dist/livelog ../haskell-deploy/livelog/api/dist
+                  cp -rf ../../code/client/dist ../haskell-deploy/livelog/client/dist
                   docker build -t ecky/livelog ../haskell-deploy
                   ;;
 

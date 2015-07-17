@@ -2,11 +2,22 @@ db:
   image: "mysql:5.7"
   env_file: env
 
-dev:
+apidev:
   build: ../haskell-dev
   env_file: env
   volumes:
-    - "../../code/api:/livelog"
+    - "../../code:/livelog"
+  ports:
+    - "3000:3000"
   links:
     - db
-  command: /livelog/build.sh
+  command: /livelog/api/build.sh
+
+clientdev:
+  build: ../client-dev
+  env_file: env
+  volumes: 
+    - "../../code:/livelog"
+  ports:
+    - "8080:8080"
+  command: "cd /livelog/client/ && npm run build"
