@@ -2,8 +2,8 @@ db:
   image: "mysql:5.7"
   env_file: env
 
-apidev:
-  build: ../haskell-dev
+dev:
+  build: ../img-dev
   env_file: env
   volumes:
     - "../../code:/livelog"
@@ -11,13 +11,4 @@ apidev:
     - "3000:3000"
   links:
     - db
-  command: sleep infinity
-
-clientdev:
-  build: ../client-dev
-  env_file: env
-  volumes: 
-    - "../../code:/livelog"
-  ports:
-    - "8080:8080"
   command: sleep infinity

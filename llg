@@ -6,10 +6,7 @@ case "$1 $2" in
                   docker-compose up -d
                   ;;
 
-  "dev api")      docker exec -it envdev_apidev_1 /bin/bash
-                  ;;
-
-  "dev client")   docker exec -it envdev_clientdev_1 /bin/bash
+  "dev enter")    docker exec -it envdev_dev_1 /bin/bash
                   ;;
 
   "dev down")     cd infra/env-dev
@@ -21,12 +18,12 @@ case "$1 $2" in
                   docker-compose build
                   docker-compose up
                   docker-compose rm -f
-                  rm -rf ../haskell-deploy/livelog
-                  mkdir -p ../haskell-deploy/livelog/api
-                  mkdir -p ../haskell-deploy/livelog/client
-                  cp -rf ../../code/api/dist/livelog ../haskell-deploy/livelog/api/dist
-                  cp -rf ../../code/client/dist ../haskell-deploy/livelog/client/dist
-                  docker build -t ecky/livelog ../haskell-deploy
+                  rm -rf ../img-deploy/livelog
+                  mkdir -p ../img-deploy/livelog/api
+                  mkdir -p ../img-deploy/livelog/client
+                  cp -rf ../../code/api/dist/livelog ../img-deploy/livelog/api/dist
+                  cp -rf ../../code/client/dist ../img-deploy/livelog/client/dist
+                  docker build -t ecky/livelog ../img-deploy
                   ;;
 
   "build local")  code/build.sh
@@ -34,15 +31,6 @@ case "$1 $2" in
 
   "build down")   cd infra/env-build
                   docker-compose rm -f
-                  ;;
-
-  "pkg up")       cd infra/env-build
-                  rm -rf ../haskell-deploy/livelog
-                  mkdir -p ../haskell-deploy/livelog/api/dist
-                  mkdir -p ../haskell-deploy/livelog/client/dist
-                  cp -rf ../../code/api/dist/livelog ../haskell-deploy/livelog/api/dist
-                  cp -rf ../../code/client/dist ../haskell-deploy/livelog/client/dist
-                  docker build -t ecky/livelog ../haskell-deploy
                   ;;
 
   "deploy up")    cd infra/env-deploy
