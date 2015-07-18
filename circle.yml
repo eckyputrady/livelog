@@ -14,7 +14,10 @@ dependencies:
     - $(pwd)/docker-compose --version
 
 test:
+  cache_directories:
+    - "~/docker"
+    - "code/api/.cabal-sandbox"
   override:
-    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi # load from cache to speed up next build
+    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; cp -rf ~/docker/.cabal-sandbox code/api fi # load from cache to speed up next build
     - "export PATH=$(pwd):$PATH && ./llg build up"
-    - mkdir -p ~/docker; docker save envbuild_dev mysql ecky/livelog > ~/docker/image.tar # cache resulting build to speed up next build
+    - mkdir -p ~/docker; docker save envbuild_dev mysql ecky/livelog > ~/docker/image.tar; cp -rf code/api/.cabal-sandbox ~/docker # cache resulting build to speed up next build

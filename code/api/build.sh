@@ -1,11 +1,11 @@
 #! /bin/bash
+set -e
 cd "$(dirname "$0")"
 
 cat /etc/hosts
 ghc --version
 cabal --version
 
-# cabal sandbox delete
 cabal sandbox init
 cabal update
 cabal configure

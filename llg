@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 case "$1 $2" in
   "dev up")       cd infra/env-dev
                   docker-compose build
