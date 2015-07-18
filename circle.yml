@@ -9,7 +9,6 @@ general:
 dependencies:
   cache_directories:
     - "~/docker"
-    - "code/api/.cabal-sandbox"
   override:
     # install docker compose
     - curl -L https://github.com/docker/compose/releases/download/1.3.2/docker-compose-`uname -s`-`uname -m` > ./docker-compose
@@ -17,8 +16,10 @@ dependencies:
     - $(pwd)/docker-compose --version
 
 test:
+  pre:
+    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/images.tar; fi # load from cache to speed up next build
+    - if [[ -e ~/docker/.cabal-sandbox ]]; then cp -rf ~/docker/.cabal-sandbox code/api; fi # load from cache to speed up next build
   override:
-    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi # load from cache to speed up next build
-    - if [[ -e ~/docker/image.tar ]]; then cp -rf ~/docker/.cabal-sandbox code/api; fi # load from cache to speed up next build
     - "export PATH=$(pwd):$PATH && ./llg build up"
-    - mkdir -p ~/docker; docker save envbuild_dev mysql ecky/livelog > ~/docker/image.tar; cp -rf code/api/.cabal-sandbox ~/docker # cache resulting build to speed up next build
+  post:
+    - mkdir -p ~/docker; docker save envbuild_dev mysql > ~/docker/images.tar; cp -rf code/api/.cabal-sandbox ~/docker # cache resulting build to speed up next build
