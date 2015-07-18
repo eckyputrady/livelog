@@ -2,12 +2,19 @@ machine:
   services:
     - docker
 
+general:
+  artifacts:
+    - "infra/img-deploy/livelog"
+
 dependencies:
   override:
+    # install docker compose
     - curl -L https://github.com/docker/compose/releases/download/1.3.2/docker-compose-`uname -s`-`uname -m` > ./docker-compose
     - chmod +x ./docker-compose
     - $(pwd)/docker-compose --version
 
 test:
   override:
+    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi # load from cache to speed up next build
     - "export PATH=$(pwd):$PATH && ./llg build up"
+    - mkdir -p ~/docker; docker save envbuild_dev mysql ecky/livelog > ~/docker/image.tar # cache resulting build to speed up next build
