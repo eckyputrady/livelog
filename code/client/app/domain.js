@@ -45,10 +45,17 @@ function isUserLoading ({register$, userCreated$, login$, sessionCreated$}) {
 }
 
 function logGroups ({logsLoaded$}) {
-  // return logsLoaded$.map(logs => {
-  //   // TODO
-  // });
-return Rx.Observable.just([]);
+  return logsLoaded$.filter(e => !e.fail).map(logs => {
+    return _.chain(logs.succ)
+            .map(x => { 
+              return {
+                date: moment(x.date).format('MMM DD'),
+                logId: x.id
+              }; 
+            })
+            .groupBy('date')
+            .value();
+  });
 }
 
 function logs ({logsLoaded$}) {

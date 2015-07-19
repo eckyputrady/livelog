@@ -349,27 +349,28 @@ function logGroupsView (model) {
   return _.map(model.logGroups, _.curry(logGroupView)(model));
 }
 
-function logGroupView (model, logGroup) {
+function logGroupView (model, logs, date) {
   return h('div', [
-    h('h5', {style:{'margin-left':'8px'}}, logGroup.date),
-    pastLogsView(model, logGroup.logs)
+    h('h5', {style:{'margin-left':'16px'}}, date),
+    pastLogsView(model, logs)
   ]);
 }
 
 function pastLogsView (model, logs) {
-  return logs.length <= 0 ? [] : h('ul.collapsible.z-depth-1', {attributes:{'data-collabsible':'accordion'}}, _.map(logs, (x) => logItemView(model, x)));
+  return logs.length <= 0 ? [] : h('ul.collapsible.z-depth-1', {attributes:{'data-collabsible':'accordion'}}, _.map(logs, _.curry(logItemView)(model)));
 }
 
-function logItemView (model, log) {
+function logItemView (model, {logId}) {
+  let log = model.logs[logId];
   return h('li', [
     h('div.collapsible-header', [
       h('i.material-icons.large' + colorBasedOnTime(log.createdAt), 'album'),
       log.message,
-      h('span.right-align', {style:{float:'right'}}, moment(log.createdAt).format('HH:mm'))
+      h('span.right-align', {style:{float:'right'}}, moment(log.createdAt).format('h:mm A'))
     ]),
-    h('div.collapsible-body',
-      h('div', {style:{'margin':'8px','margin-left':'18px'}}, labels(model, log))
-    ),
+    h('div.collapsible-body', [
+      // h('div', {style:{'margin':'8px','margin-left':'18px'}}, labels(model, log))
+    ]),
   ]);
 }
 
@@ -389,7 +390,7 @@ function colorBasedOnTime (date) {
 function buildLogVM (model, logId) {
   let log = !logId ? null : model.logs[logId];
   return log ? {
-    createdAt : moment(log.createdAt).format('h:mm a'),
+    createdAt : moment(log.createdAt).format('h:mm A'),
     message   : log.message,
     duration  : moment.utc(new Date() - new Date(log.createdAt)).format('H:mm:ss')
   } : {
