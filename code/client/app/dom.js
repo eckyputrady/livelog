@@ -24,22 +24,23 @@ function input (DOM) {
   return {
     register$: parseLogin(DOM, '#register'),
     login$: parseLogin(DOM, '#login'),
-    logout$: parseLogout(DOM),
-    createLog$: parseCreateLog(DOM),
-    createTag$: parseCreateTag(DOM),
-    changeState$: parseChangeState(DOM),
-    createTagging$: parseCreateTagging(DOM),
-    deleteTagging$: parseDeleteTagging(DOM)
+    // logout$: parseLogout(DOM),
+    // createLog$: parseCreateLog(DOM),
+    // createTag$: parseCreateTag(DOM),
+    // changeState$: parseChangeState(DOM),
+    // createTagging$: parseCreateTagging(DOM),
+    // deleteTagging$: parseDeleteTagging(DOM)
   };
 }
 
 function parseLogin (DOM, selector) {
   return DOM.get('form#login ' + selector + ':not(.disabled)', 'click').map(() => {
-    return {
-      name: $('form#login input#username').val(),
-      pass: $('form#login input#password').val()
-    };
-  });
+      return {
+        name: $('form#login input#username').val(),
+        pass: $('form#login input#password').val()
+      };
+    })
+    .filter(x => !!x.name && !!x.pass);
 }
 
 function parseCreateLog (DOM) {
@@ -111,16 +112,60 @@ function parseChangeState (DOM) {
 
 //// OUTPUT
 
-function output (model$) {
-  let state$ = model$.map(applyFx).map(model => model.state);
-  let interval$ = Rx.Observable.interval(1000).startWith(0);
-  let modelUpdated$ = Rx.Observable.combineLatest(state$, interval$, state => state);
-  let modelSampled$ = modelUpdated$.sample(1000 / 30); // only draw every 30FPS
-  return modelSampled$.map(render);
+function output (model, inputs) {
+  showToast$(model, inputs);
+
+  //
+  let curTime$ = timeEvery1Sec();
+  let model$ = snapModel(curTime$, model);
+  let sampledModel$ = model$.sample(1000 / 30); // draw every 30FPS & IF there is any change
+  return sampledModel$.map(render);
 }
 
-function render (state) {
-  return !state.user.sVal ? loginView(state) : loggedInView(state);
+function showToast$ (model, inputs) {
+  let errors$ = Rx.Observable.merge([
+      inputs.userCreated$,
+      inputs.sessionCreated$
+    ])
+    .filter(e => e.fail)
+    .map(e => e.fail.message);
+
+  let userCreatedMsg$ = inputs.userCreated$.filter(x => x.succ).map((x) => `'${x.request.send.name}' is registered successfully!`);
+  let sessionCreatedMsg$ = inputs.sessionCreated$.filter(x => x.succ).map((x) => `Hi, ${x.request.send.name}!`);
+
+  return Rx.Observable.merge([
+      errors$,
+      userCreatedMsg$,
+      sessionCreatedMsg$
+    ])  
+    .subscribe((e) => Materialize.toast(e, 3000));
+}
+
+function timeEvery1Sec () {
+  return Rx.Observable.interval(1000).startWith(0).map(_ => new Date());
+}
+
+function snapModel (time$, model) {
+  return Rx.Observable.combineLatest(
+    time$, model.state$, model.logGroups$, model.logs$, model.tags$, model.taggings$, model.curUser$,
+    model.isUserLoading$,
+    (time, state, logGroups, logs, tags, taggings, curUser, isUserLoading) => {
+      return {
+        time: time,
+        state: state,
+        logGroups: logGroups,
+        logs: logs,
+        tags: tags,
+        taggings: taggings,
+        user: curUser,
+        isUserLoading: isUserLoading
+      };
+    });
+}
+
+function render (model) {
+  // return !model.user ? loginView(model) : loggedInView(model);
+  return loginView(model);
 }
 
 function applyFx (model) {
@@ -142,19 +187,16 @@ function applyFx (model) {
 
 // LOGIN
 
-let hasModalsInit = false;
 function loginView (model) {
-  hasModalsInit = false; // due to materialize being stateful 
-
   return h('div', [
     navbar(false),
-    !model.user.isLoading ? null : h('div.progress', {style:{margin:'0px'}}, h('div.indeterminate')),
+    !model.isUserLoading ? null : h('div.progress', {style:{margin:'0px'}}, h('div.indeterminate')),
     h('div.container', h('div.section', loginForm('login', model)))
   ]);
 }
 
 function loginForm (formId, model) {
-  var isDisabled = model.user.isLoading ? 'disabled' : '';
+  var isDisabled = model.isUserLoading ? 'disabled' : '';
   return h('div.row', h(`form.col.s12#${formId}`, [
     h('h4', 'Login'),
     h('div.row', h('div.input-field.col.s12', [
@@ -175,8 +217,8 @@ function loginForm (formId, model) {
 // LOGGED IN
 
 function loggedInView (model) {
-  setTimeout(initDropdown, 200); // need stateful initialization ...
-  setTimeout(initCollapsible, 200);
+  // setTimeout(initDropdown, 200); // need stateful initialization ...
+  // setTimeout(initCollapsible, 200);
 
   return h('div', [
     navbar(true),
@@ -184,6 +226,71 @@ function loggedInView (model) {
     fab(),
     modals()
   ]);
+}
+
+function modal (id, content, footer) {
+  return h('div#' + id + '.modal', [
+    h('div.modal-content', content),
+    h('div.modal-footer', footer)
+  ]);
+}
+
+function logDialogModal () {
+  return modal('log-dialog', [
+    h('h4', 'Log An Activity'),
+    h('div.row', [
+      h('div.input-field.s12', [
+        h('input#create-log-name', {type:'text'}),
+        h('label', 'Activity name')
+      ])
+    ])
+  ], [
+    h('a#create-log.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Create'),
+    h('a.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Cancel'),
+  ]);
+}
+
+function tagDialogModal () {
+  return modal('tag-dialog', [
+    h('h4', 'Create Tag'),
+    h('form', [
+      h('div.input-field', [
+        h('input#create-tag-name', {type:'text'}),
+        h('label', 'Tag name')
+      ])
+    ])
+  ], [
+    h('a#create-tag.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Create'),
+    h('a.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Cancel'),
+  ]);
+}
+
+function fab () {
+  return h('div.fixed-action-btn', {style:{bottom:'45px',right:'24px'}}, [
+    h('a.btn-floating.btn-large.red', h('i.large.material-icons', 'add')),
+    h('ul', [
+      h('li', h('a.modal-trigger.btn-floating.red', {href:'#log-dialog'}, h('i.small.material-icons', 'done'))),
+      h('li', h('a.modal-trigger.btn-floating.red', {href:'#tag-dialog'}, h('i.small.material-icons', 'label')))
+    ])
+  ]);
+}
+
+function modals () {
+  setTimeout(initModals, 200);
+  return [
+    logDialogModal(),
+    tagDialogModal()
+  ];
+}
+
+function initModals () {
+  if (hasModalsInit) { return; }
+  hasModalsInit = true;
+  $('.modal-trigger').leanModal();
+}
+
+function initCollapsible () {
+  $('.collapsible').collapsible();
 }
 
 // TAGS
@@ -375,69 +482,4 @@ function initDropdown () {
       belowOrigin: false // Displays dropdown below the button
     }
   );
-}
-
-function modal (id, content, footer) {
-  return h('div#' + id + '.modal', [
-    h('div.modal-content', content),
-    h('div.modal-footer', footer)
-  ]);
-}
-
-function logDialogModal () {
-  return modal('log-dialog', [
-    h('h4', 'Log An Activity'),
-    h('div.row', [
-      h('div.input-field.s12', [
-        h('input#create-log-name', {type:'text'}),
-        h('label', 'Activity name')
-      ])
-    ])
-  ], [
-    h('a#create-log.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Create'),
-    h('a.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Cancel'),
-  ]);
-}
-
-function tagDialogModal () {
-  return modal('tag-dialog', [
-    h('h4', 'Create Tag'),
-    h('form', [
-      h('div.input-field', [
-        h('input#create-tag-name', {type:'text'}),
-        h('label', 'Tag name')
-      ])
-    ])
-  ], [
-    h('a#create-tag.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Create'),
-    h('a.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Cancel'),
-  ]);
-}
-
-function fab () {
-  return h('div.fixed-action-btn', {style:{bottom:'45px',right:'24px'}}, [
-    h('a.btn-floating.btn-large.red', h('i.large.material-icons', 'add')),
-    h('ul', [
-      h('li', h('a.modal-trigger.btn-floating.red', {href:'#log-dialog'}, h('i.small.material-icons', 'done'))),
-      h('li', h('a.modal-trigger.btn-floating.red', {href:'#tag-dialog'}, h('i.small.material-icons', 'label')))
-    ])
-  ]);
-}
-
-function modals () {
-  setTimeout(initModals, 200);
-  return [
-    logDialogModal(),
-    tagDialogModal()
-  ];
-}
-
-function initModals () {
-  if (hasModalsInit) { return; }
-  hasModalsInit = true;
-  $('.modal-trigger').leanModal();
-}
-
-function initCollapsible () {
-  $('.collapsible').collapsible();
 }

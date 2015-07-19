@@ -13,21 +13,24 @@ run(main, {
   HTTP: HTTP.driver()
 });
 
+////
+
 function main (responses) {
   return output(update(input(responses)));
 }
 
-function output (model$) {
-  return {
-    DOM: DOM.output(model$),
-    HTTP: HTTP.output(model$),
+function output ({model, inputs}) {
+  let ret = {
+    DOM: DOM.output(model, inputs),
+    HTTP: HTTP.output(model, inputs),
   };
+  // Rx.Observable.merge(ret.DOM, ret.HTTP).subscribe(trace('ok'), trace('err'));
+  return ret;
 }
 
-function update (intents) {
-  let model$ = Domain.update(intents).map(trace('model:')).share();
-  model$.subscribe(() => {}, console.log.bind(console));
-  return model$;
+function update (inputs) {
+  let model = Domain.update(inputs);
+  return {model: model, inputs: inputs};
 }
 
 function input (responses) {
@@ -47,7 +50,7 @@ function mergeIntents (intents) {
 
 function trace (prefix) {
   return function _trace (e) {
-    // console.log(prefix, e);
+    console.log(prefix, e);
     return e;
   };
 }
