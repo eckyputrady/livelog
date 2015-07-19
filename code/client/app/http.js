@@ -27,7 +27,8 @@ function input (HTTP$$) {
     // taggingRemoved$:
     // taggingsLoaded$:
     userCreated$: commonParse(3, http$$),
-    sessionCreated$: commonParse(4, http$$)
+    sessionCreated$: commonParse(4, http$$),
+    sessionLoaded$: commonParse(5, http$$)
   };
 }
 
@@ -51,7 +52,8 @@ function output (model, inputs) {
     loadLogs(model, inputs),
     loadTags(model, inputs),
     createUser(model, inputs),
-    createSession(model, inputs)
+    createSession(model, inputs),
+    getSession(model, inputs)
   ]);
 }
 
@@ -94,6 +96,18 @@ function createSession (model, {userCreated$, login$}) {
       method: 'POST',
       url: '/sessions',
       send: data
+    };
+  });
+}
+
+function getSession ({curUser$}, {sessionCreated$}) {
+  let afterLogin$ = sessionCreated$.filter(e => !e.fail)
+  let nullUser$ = curUser$.filter(e => !e);
+  return Rx.Observable.merge([afterLogin$, nullUser$]).map(() => {
+    return {
+      __type: 5,
+      method: 'GET',
+      url: '/sessions'
     };
   });
 }

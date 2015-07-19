@@ -7,6 +7,7 @@ import {h, makeDOMDriver} from '@cycle/web';
 import moment from 'moment';
 import _ from 'lodash';
 import {Rx} from '@cycle/core';
+import {trace} from './util.js';
 
 module.exports = {
   input, output, driver
@@ -164,8 +165,8 @@ function snapModel (time$, model) {
 }
 
 function render (model) {
-  // return !model.user ? loginView(model) : loggedInView(model);
-  return loginView(model);
+  return !model.user ? loginView(model) : loggedInView(model);
+  // return loginView(model);
 }
 
 function applyFx (model) {

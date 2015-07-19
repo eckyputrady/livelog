@@ -14,9 +14,17 @@ function update (inputs) {
     logs$: logs(inputs),
     tags$: tags(inputs),
     taggings$: taggings(inputs),
-    curUser$: Rx.Observable.just('Logs'),
+    curUser$: curUser(inputs),
     isUserLoading$: isUserLoading(inputs)
   };
+}
+
+function curUser ({sessionLoaded$}) {
+  return sessionLoaded$
+    .do(trace('sessionLoaded'))
+    .filter(x => !x.fail)
+    .map(x => x.succ.name)
+    .startWith(null);
 }
 
 function isUserLoading ({register$, userCreated$, login$, sessionCreated$}) {
