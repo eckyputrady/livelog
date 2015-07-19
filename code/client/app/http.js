@@ -17,9 +17,9 @@ function driver () {
 function input (HTTP$$) {
   let http$$ = HTTP$$.share();
   return {
-    // logAdded$:
+    logAdded$: commonParse(6, http$$),
     // logRemoved$:
-    // logsLoaded$:
+    logsLoaded$: commonParse(1, http$$),
     // tagAdded$:
     // tagRemoved$:
     // tagsLoaded$:
@@ -50,6 +50,7 @@ function commonParse (type, http$$) {
 function output (model, inputs) {
   return Rx.Observable.merge([
     loadLogs(model, inputs),
+    createLog(model, inputs),
     loadTags(model, inputs),
     createUser(model, inputs),
     createSession(model, inputs),
@@ -57,13 +58,29 @@ function output (model, inputs) {
   ]);
 }
 
-function loadLogs ({state$}) {
-  return state$.distinctUntilChanged().filter(e => e === 'Logs').map(_ => {
+function loadLogs ({curUser$, state$}, {logAdded$}) {
+  let distinctLogState$ = state$.distinctUntilChanged().filter(e => e === 'Logs');
+  let nonNullUser$ = curUser$.filter(e => !e);
+  let bothCond$ = Rx.Observable.zip(distinctLogState$, nonNullUser$, () => undefined);
+  let trigger$ = Rx.Observable.merge(bothCond$, logAdded$);
+
+  return trigger$.map(_ => {
     return {
       __type: 1,
       method: 'GET',
       url: '/logs?sort=-createdAt',
     };
+  });
+}
+
+function createLog (model, {createLog$}) {
+  return createLog$.map(data => {
+    return {
+      __type: 6,
+      method: 'POST',
+      url: '/logs',
+      send: data
+    }
   });
 }
 

@@ -15,13 +15,17 @@ function update (inputs) {
     tags$: tags(inputs),
     taggings$: taggings(inputs),
     curUser$: curUser(inputs),
-    isUserLoading$: isUserLoading(inputs)
+    isUserLoading$: isUserLoading(inputs),
+    curLogId$: curLogId(inputs)
   };
+}
+
+function curLogId ({logsLoaded$}) {
+  return logsLoaded$.filter(xs => !xs.fail).map(xs => xs.succ[0] ? xs.succ[0].id : null).startWith(null);
 }
 
 function curUser ({sessionLoaded$}) {
   return sessionLoaded$
-    .do(trace('sessionLoaded'))
     .filter(x => !x.fail)
     .map(x => x.succ.name)
     .startWith(null);
@@ -48,14 +52,17 @@ return Rx.Observable.just([]);
 }
 
 function logs ({logsLoaded$}) {
-  // return logsLoaded$.map(logs => {
-  //   return _.chain(logs)
-  //           .map(log => [log.id, log])
-  //           .zipObject()
-  //           .value();
-  // }).startWith({})
+  return logsLoaded$
+    .filter(e => !e.fail)
+    .map(e => e.succ)
+    .map(logs => {
+      return _.chain(logs)
+              .map(log => [log.id, log])
+              .zipObject()
+              .value();
+    }).startWith({});
 
-  return Rx.Observable.just({});
+  // return Rx.Observable.just({});
 }
 
 function tags ({tagsLoaded$}) {

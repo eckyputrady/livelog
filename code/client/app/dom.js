@@ -26,7 +26,7 @@ function input (DOM) {
     register$: parseLogin(DOM, '#register'),
     login$: parseLogin(DOM, '#login'),
     // logout$: parseLogout(DOM),
-    // createLog$: parseCreateLog(DOM),
+    createLog$: parseCreateLog(DOM),
     // createTag$: parseCreateTag(DOM),
     // changeState$: parseChangeState(DOM),
     // createTagging$: parseCreateTagging(DOM),
@@ -49,7 +49,7 @@ function parseCreateLog (DOM) {
   let btnId = '#create-log';
   let modalId = '#log-dialog';
   let clicks = DOM.get(btnId + ':not(.disabled)', 'click');
-  let enters = DOM.get(id, 'keyup').filter(e => e.keyCode === 13).map(() => $(modalId).closeModal());
+  let enters = DOM.get(id, 'keyup').filter(e => e.keyCode === 13).do(() => $(modalId).closeModal());
   let merged = Rx.Observable.merge(clicks, enters);
 
   return merged.map(() => {
@@ -149,8 +149,8 @@ function timeEvery1Sec () {
 function snapModel (time$, model) {
   return Rx.Observable.combineLatest(
     time$, model.state$, model.logGroups$, model.logs$, model.tags$, model.taggings$, model.curUser$,
-    model.isUserLoading$,
-    (time, state, logGroups, logs, tags, taggings, curUser, isUserLoading) => {
+    model.isUserLoading$, model.curLogId$,
+    (time, state, logGroups, logs, tags, taggings, curUser, isUserLoading, curLogId) => {
       return {
         time: time,
         state: state,
@@ -159,7 +159,8 @@ function snapModel (time$, model) {
         tags: tags,
         taggings: taggings,
         user: curUser,
-        isUserLoading: isUserLoading
+        isUserLoading: isUserLoading,
+        curLogId: curLogId
       };
     });
 }
@@ -270,24 +271,25 @@ function fab () {
   return h('div.fixed-action-btn', {style:{bottom:'45px',right:'24px'}}, [
     h('a.btn-floating.btn-large.red', h('i.large.material-icons', 'add')),
     h('ul', [
-      h('li', h('a.modal-trigger.btn-floating.red', {href:'#log-dialog'}, h('i.small.material-icons', 'done'))),
-      h('li', h('a.modal-trigger.btn-floating.red', {href:'#tag-dialog'}, h('i.small.material-icons', 'label')))
+      h('li', h('a.modal-trigger.btn-floating.red', {'modal-hook': new initModalHook(), href:'#log-dialog'}, h('i.small.material-icons', 'done'))),
+      h('li', h('a.modal-trigger.btn-floating.red', {'modal-hook': new initModalHook(), href:'#tag-dialog'}, h('i.small.material-icons', 'label')))
     ])
   ]);
 }
 
 function modals () {
-  setTimeout(initModals, 200);
   return [
     logDialogModal(),
     tagDialogModal()
   ];
 }
 
-function initModals () {
-  if (hasModalsInit) { return; }
-  hasModalsInit = true;
-  $('.modal-trigger').leanModal();
+
+function initModalHook () {}
+initModalHook.prototype.hook = (node, propname, prevVal) => {
+  if (!prevVal) {
+    $(node).leanModal();
+  }
 }
 
 function initCollapsible () {
@@ -384,9 +386,10 @@ function colorBasedOnTime (date) {
                       '.blue-grey-text.text-darken-3';
 }
 
-function buildLogVM (model, log) {
+function buildLogVM (model, logId) {
+  let log = !logId ? null : model.logs[logId];
   return log ? {
-    createdAt : moment(log.createdAt).format('YYYY/MM/DD hh:mm:ss'),
+    createdAt : moment(log.createdAt).format('h:mm a'),
     message   : log.message,
     duration  : moment.utc(new Date() - new Date(log.createdAt)).format('H:mm:ss')
   } : {
@@ -397,13 +400,11 @@ function buildLogVM (model, log) {
 }
 
 function currentLogView (model) {
-  let logL = model.logs.sVal[0];
-  let log = logL ? logL.sVal : undefined;
-  let logVM = buildLogVM(model, log);
+  let logVM = buildLogVM(model, model.curLogId);
   return h('div.row', [
     h('h1.col.s12.center', logVM.duration),
     h('h4.col.s12.center', logVM.message),
-    h('div.col.s12.center', labels(model, log)),
+    // h('div.col.s12.center', labels(model, model.curLogId)),
     h('p.col.s12.center', logVM.createdAt ? 
       ['since ', h('b', logVM.createdAt)] :
       []
