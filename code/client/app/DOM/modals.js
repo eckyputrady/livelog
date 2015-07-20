@@ -39,8 +39,7 @@ function logDialogModal () {
     h('h4', 'Log An Activity'),
     h('div.row', [
       h('div.input-field.s12', [
-        h('input#create-log-name', {type:'text'}),
-        h('label', 'Activity name')
+        h('input#create-log-name', {type:'text', placeholder: 'Activity name'})
       ])
     ])
   ], [
@@ -54,8 +53,7 @@ function tagDialogModal () {
     h('h4', 'Create Tag'),
     h('form', [
       h('div.input-field', [
-        h('input#create-tag-name', {type:'text'}),
-        h('label', 'Tag name')
+        h('input#create-tag-name', {type:'text', placeholder:'Tag name'}),
       ])
     ])
   ], [
