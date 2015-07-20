@@ -1,7 +1,7 @@
 import {run, Rx} from '@cycle/core';
 import _ from 'lodash';
 
-let DOM = require('./dom.js');
+let DOM = require('./DOM/index.js');
 let Domain = require('./domain.js');
 let HTTP = require('./http.js');
 

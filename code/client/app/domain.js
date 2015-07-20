@@ -55,7 +55,8 @@ function logGroups ({logsLoaded$}) {
             })
             .groupBy('date')
             .value();
-  });
+  })
+  .startWith({});
 }
 
 function logs ({logsLoaded$}) {

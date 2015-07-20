@@ -34,7 +34,7 @@ function input (HTTP$$) {
 
 function commonParse (type, http$$) {
   return http$$
-    .filter(x$ => x$.request.__type === type)
+    .filter(x$ => x$.request && x$.request.__type === type)
     .flatMapLatest(x$ => {
       return x$ .map(x => { return { succ: x.body }; })
                 .catch(x => { return Rx.Observable.just({ fail: x }); })
