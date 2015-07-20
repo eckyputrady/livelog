@@ -17,7 +17,7 @@ function output (model) {
 function logsView (model) {
   return [
     h('div.container.section', currentLogView(model)),
-    h('div.section', [
+    h('div.container.section', [
       logGroupsView(model),
       h('div.center', circleLoader(model.logs.isLoading))
     ])
@@ -30,7 +30,7 @@ function logGroupsView (model) {
 
 function logGroupView (model, logs, date) {
   return h('div', [
-    h('h5', {style:{'margin-left':'16px'}}, date),
+    h('h5', date),
     pastLogsView(model, logs)
   ]);
 }
@@ -57,10 +57,11 @@ function logItemView (model, {logId}) {
   return h('li', [
     h('div.collapsible-header', [
       h('i.material-icons.large' + colorBasedOnTime(log.createdAt), 'album'),
-      log.message,
+      h('span', log.message),
       h('span.right-align', {style:{float:'right'}}, moment(log.createdAt).format('h:mm A'))
     ]),
-    h('div.collapsible-body', [
+    h('div.collapsible-body.grey.lighten-4', [
+      // h('', {style:{'margin':'8px','margin-left':'18px'}}, 'some text'),
       h('div', {style:{'margin':'8px','margin-left':'18px'}}, labels(model, log))
     ]),
   ]);

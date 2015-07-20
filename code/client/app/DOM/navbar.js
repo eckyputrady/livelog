@@ -8,7 +8,7 @@ module.exports = {
 
 function output (withSideNav) {
   return h('nav', [
-    h('div', [
+    h('div.container', [
       sideNav(withSideNav),
       h('div.nav-wrapper', [
         h('a.brand-logo', 'LiveLog')
@@ -20,15 +20,20 @@ function output (withSideNav) {
 function sideNav (visible) {
   let extraClass = visible ? '' : '.hide';
   return [
-    h('ul#sideNav.side-nav', [
-      h('li', h('a#change-state', {attributes:{'data-nextState':'Logs'}}, 'Logs')),
-      h('li', h('a#change-state', {attributes:{'data-nextState':'Tags'}}, 'Tags')),
-      h('li.divider'),
-      h('li', h('a#logout', 'Logout'))
-    ]),
+    h('ul.right.hide-on-med-and-down' + extraClass, sideNavContent()),
+    h('ul#sideNav.side-nav', sideNavContent()),
     h('a.button-collapse' + extraClass, 
-      {'hook-init': new initSidenavHook(), attributes:{'data-activates':'sideNav'},style:{'margin-left':'16px'}}, 
+      {'hook-init': new initSidenavHook(), attributes:{'data-activates':'sideNav'}}, 
       h('i.mdi-navigation-menu'))
+  ];
+}
+
+function sideNavContent () {
+  return [
+    h('li', h('a#change-state', {attributes:{'data-nextState':'Logs'}}, 'Logs')),
+    h('li', h('a#change-state', {attributes:{'data-nextState':'Tags'}}, 'Tags')),
+    h('li.divider'),
+    h('li', h('a#logout', 'Logout'))
   ];
 }
 

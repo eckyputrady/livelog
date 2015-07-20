@@ -16,8 +16,8 @@ function output (model) {
 
 function tagsView (model) {
   return [
-    h('div.row', h('div.col.s12', h('h3', 'Tags'))),
-    h('div', [
+    h('div.container', h('h3', 'Tags')),
+    h('div.container', [
       tagsListing(model),
       // h('div.center', circleLoader(model.tags.isLoading))
     ])
@@ -25,7 +25,7 @@ function tagsView (model) {
 }
 
 function tagsListing (model) {
-  return h('ul.collection', [
+  return h('ul.collection.z-depth-1', [
     _.map(model.tags, tagItem)
   ]);
 }
