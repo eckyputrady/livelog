@@ -24,11 +24,10 @@ function curLogId ({logsLoaded$}) {
   return logsLoaded$.filter(xs => !xs.fail).map(xs => xs.succ[0] ? xs.succ[0].id : null).startWith(null);
 }
 
-function curUser ({sessionLoaded$}) {
-  return sessionLoaded$
-    .filter(x => !x.fail)
-    .map(x => x.succ.name)
-    .startWith(null);
+function curUser ({sessionLoaded$, sessionRemoved$, logout$}) {
+  let loggedIn$ = sessionLoaded$.filter(x => !x.fail).map(x => x.succ.name)
+  let loggedOut$ = Rx.Observable.merge([sessionRemoved$, logout$]).map(() => null);
+  return Rx.Observable.merge([loggedIn$, loggedOut$]).startWith(null);
 }
 
 function isUserLoading ({register$, userCreated$, login$, sessionCreated$}) {

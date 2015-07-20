@@ -46,7 +46,9 @@ function output (model, inputs) {
 function showToast$ (model, inputs) {
   let errors$ = Rx.Observable.merge([
       inputs.userCreated$,
-      inputs.sessionCreated$
+      inputs.sessionCreated$,
+      inputs.logsLoaded$,
+      inputs.logAdded$
     ])
     .filter(e => e.fail)
     .map(e => e.fail.message);

@@ -28,7 +28,8 @@ function input (HTTP$$) {
     // taggingsLoaded$:
     userCreated$: commonParse(3, http$$),
     sessionCreated$: commonParse(4, http$$),
-    sessionLoaded$: commonParse(5, http$$)
+    sessionLoaded$: commonParse(5, http$$),
+    sessionRemoved$: commonParse(7, http$$)
   };
 }
 
@@ -54,13 +55,14 @@ function output (model, inputs) {
     loadTags(model, inputs),
     createUser(model, inputs),
     createSession(model, inputs),
-    getSession(model, inputs)
+    getSession(model, inputs),
+    logout(model, inputs)
   ]);
 }
 
 function loadLogs ({curUser$, state$}, {logAdded$}) {
   let distinctLogState$ = state$.distinctUntilChanged().filter(e => e === 'Logs');
-  let nonNullUser$ = curUser$.filter(e => !e);
+  let nonNullUser$ = curUser$.filter(e => !!e);
   let bothCond$ = Rx.Observable.zip(distinctLogState$, nonNullUser$, () => undefined);
   let trigger$ = Rx.Observable.merge(bothCond$, logAdded$);
 
@@ -124,6 +126,16 @@ function getSession ({curUser$}, {sessionCreated$}) {
     return {
       __type: 5,
       method: 'GET',
+      url: '/sessions'
+    };
+  });
+}
+
+function logout (model, {logout$}) {
+  return logout$.map(() => {
+    return {
+      __type: 7,
+      method: 'DEL',
       url: '/sessions'
     };
   });

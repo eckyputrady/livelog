@@ -43,7 +43,7 @@ initSidenavHook.prototype.hook = (node, name, prevVal) => {
 
 function input(DOM) {
   return {
-
+    logout$: parseLogout(DOM),
   };
 }
 
