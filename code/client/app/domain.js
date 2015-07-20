@@ -76,13 +76,12 @@ function logs ({logsLoaded$}) {
 }
 
 function tags ({tagsLoaded$}) {
-  // return tagsLoaded$.map(tags => {
-  //   return _.chain(tag)
-  //           .map(tag => [tag.id, tag])
-  //           .zipObject()
-  //           .value();
-  // }).startWith({});
-  return Rx.Observable.just({});
+  return tagsLoaded$.do(trace('tagsLoaded')).map(tags => {
+    return _.chain(tags.succ)
+            .map(tag => [tag.id, tag])
+            .zipObject()
+            .value();
+  }).startWith({});
 }
 
 function taggings ({taggingsLoaded$}) {

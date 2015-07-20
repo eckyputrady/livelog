@@ -19,21 +19,21 @@ function tagsView (model) {
     h('div.row', h('div.col.s12', h('h3', 'Tags'))),
     h('div', [
       tagsListing(model),
-      h('div.center', circleLoader(model.tags.isLoading))
+      // h('div.center', circleLoader(model.tags.isLoading))
     ])
   ];
 }
 
 function tagsListing (model) {
   return h('ul.collection', [
-    _.map(model.tags.sVal, tagItem)
+    _.map(model.tags, tagItem)
   ]);
 }
 
 function tagItem (tag) {
   return h('li.collection-item', [
     h('div', [
-      tag.sVal.name,
+      tag.name,
       h('a.secondary-content', h('i.material-icons', 'delete'))
     ])
   ]);

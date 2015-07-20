@@ -22,7 +22,7 @@ function input (HTTP$$) {
     logsLoaded$: commonParse(1, http$$),
     tagAdded$: commonParse(8, http$$),
     // tagRemoved$:
-    // tagsLoaded$:
+    tagsLoaded$: commonParse(2, http$$),
     // taggingAdded$:
     // taggingRemoved$:
     // taggingsLoaded$:
@@ -62,12 +62,10 @@ function output (model, inputs) {
 }
 
 function loadLogs ({curUser$, state$}, {logAdded$}) {
-  let distinctLogState$ = state$.distinctUntilChanged().filter(e => e === 'Logs');
-  let nonNullUser$ = curUser$.filter(e => !!e);
-  let bothCond$ = Rx.Observable.zip(distinctLogState$, nonNullUser$, () => undefined);
-  let trigger$ = Rx.Observable.merge(bothCond$, logAdded$);
+  let logsState$ = state$.distinctUntilChanged().filter(e => e === 'Logs');
+  let nonNullUser$ = curUser$.distinctUntilChanged().filter(e => !!e);
 
-  return trigger$.map(_ => {
+  return Rx.Observable.merge([nonNullUser$, logsState$]).map(_ => {
     return {
       __type: 1,
       method: 'GET',
@@ -87,8 +85,11 @@ function createLog (model, {createLog$}) {
   });
 }
 
-function loadTags ({state$}) {
-  return state$.distinctUntilChanged().filter(e => e === 'Tags').map(_ => {
+function loadTags ({curUser$, state$}, {tagAdded$}) {
+  let nonNullUser$ = curUser$.distinctUntilChanged().filter(e => !!e);
+  let tagsState$ = state$.distinctUntilChanged().filter(e => e === 'Tags');
+  let tagAddedSucc$ = tagAdded$.filter(x => !x.fail);
+  return Rx.Observable.merge([nonNullUser$, tagsState$, tagAddedSucc$]).map(() => {
     return {
       __type: 2,
       method: 'GET',
