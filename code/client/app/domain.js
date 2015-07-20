@@ -85,12 +85,12 @@ function tags ({tagsLoaded$}) {
 }
 
 function taggings ({taggingsLoaded$}) {
-  // TODO fix this
-  // return taggingsLoaded$.map(taggings => {
-  //   return _.chain(tag)
-  //           .map(tag => [tag.id, tag])
-  //           .zipObject()
-  //           .value();
-  // }).startWith({});
-  return Rx.Observable.just({});
+  let newTagging$ = taggingsLoaded$.filter(x => !x.fail)
+    .map(x => {
+      let ret = {};
+      ret[x.request.send.logId] = _.map(x.succ, 'id');
+      return ret;
+    });
+  return newTagging$.scan(_.assign).startWith({});
+  // return Rx.Observable.just({});
 }

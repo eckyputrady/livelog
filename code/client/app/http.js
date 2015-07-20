@@ -23,9 +23,9 @@ function input (HTTP$$) {
     tagAdded$: commonParse(8, http$$),
     // tagRemoved$:
     tagsLoaded$: commonParse(2, http$$),
-    // taggingAdded$:
-    // taggingRemoved$:
-    // taggingsLoaded$:
+    taggingAdded$: commonParse(9, http$$),
+    taggingRemoved$: commonParse(10, http$$),
+    taggingsLoaded$: commonParse(11, http$$),
     userCreated$: commonParse(3, http$$),
     sessionCreated$: commonParse(4, http$$),
     sessionLoaded$: commonParse(5, http$$),
@@ -36,7 +36,7 @@ function input (HTTP$$) {
 function commonParse (type, http$$) {
   return http$$
     .filter(x$ => x$.request && x$.request.__type === type)
-    .flatMapLatest(x$ => {
+    .flatMap(x$ => {
       return x$ .map(x => { return { succ: x.body }; })
                 .catch(x => { return Rx.Observable.just({ fail: x }); })
                 .map(x => {
@@ -54,6 +54,9 @@ function output (model, inputs) {
     createLog(model, inputs),
     loadTags(model, inputs),
     createTag(model, inputs),
+    loadTaggings(model, inputs),
+    createTagging(model, inputs),
+    removeTagging(model, inputs),
     createUser(model, inputs),
     createSession(model, inputs),
     getSession(model, inputs),
@@ -65,11 +68,11 @@ function loadLogs ({curUser$, state$}, {logAdded$}) {
   let logsState$ = state$.distinctUntilChanged().filter(e => e === 'Logs');
   let nonNullUser$ = curUser$.distinctUntilChanged().filter(e => !!e);
 
-  return Rx.Observable.merge([nonNullUser$, logsState$]).map(_ => {
+  return Rx.Observable.merge([nonNullUser$, logsState$, logAdded$]).debounce(200).map(() => {
     return {
       __type: 1,
       method: 'GET',
-      url: '/logs?sort=-createdAt',
+      url: '/logs?sort=-createdAt&limit=50',
     };
   });
 }
@@ -104,6 +107,42 @@ function createTag (model, {createTag$}) {
       __type: 8,
       method: 'POST',
       url: '/tags',
+      send: data
+    };
+  });
+}
+
+function loadTaggings (model, {logsLoaded$, taggingAdded$, taggingRemoved$}) {
+  let taggingModified$ = Rx.Observable.merge([taggingRemoved$, taggingAdded$]).filter(x => !x.fail).map(x => x.request.send.logId);
+  let t$ = logsLoaded$.filter(x => !x.fail).flatMap(({succ}) => Rx.Observable.from(succ)).map(log => log.id);
+  return Rx.Observable.merge([taggingModified$, t$])
+    .map(logId => {
+      return {
+        __type: 11,
+        method: 'GET',
+        url: '/logs/' + logId + '/tags',
+        send: {logId: logId}
+      };
+    });
+}
+
+function createTagging (model, {createTagging$}) {
+  return createTagging$.map(data => {
+    return {
+      __type: 9,
+      method: 'POST',
+      url: '/logs/' + data.logId + '/tags/' + data.tagId,
+      send: data
+    }
+  });
+}
+
+function removeTagging (model, {removeTagging$}) {
+  return removeTagging$.map(data => {
+    return {
+      __type: 10,
+      method: 'DEL',
+      url: '/logs/' + data.logId + '/tags/' + data.tagId,
       send: data
     }
   });

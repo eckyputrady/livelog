@@ -97,7 +97,7 @@ function currentLogView (model) {
   return h('div.row', [
     h('h1.col.s12.center', logVM.duration),
     h('h4.col.s12.center', logVM.message),
-    // h('div.col.s12.center', labels(model, model.curLogId)),
+    h('div.col.s12.center', labels(model, model.logs[model.curLogId], 'main')),
     h('p.col.s12.center', logVM.createdAt ? 
       ['since ', h('b', logVM.createdAt)] :
       []
@@ -105,14 +105,14 @@ function currentLogView (model) {
   ]);
 }
 
-function labels (model, log) {
+function labels (model, log, idPrefix) {
   if (!log) { return []; }
 
   let taggings = model.taggings[log.id] || [];
-  let tags = _.filter(_.map(taggings, (tagId) => model.tags[tagId]));
+  let tags = _.filter(_.map(taggings, tagId => model.tags[tagId]));
   return [
     _.map(tags, _.curry(label)(log)),
-    labelInput(log, model.tags)
+    labelInput(log, model.tags, idPrefix)
   ];
 }
 
@@ -123,12 +123,16 @@ function label (log, tag) {
   ]);
 }
 
-function labelInput (log, tags) {
-  var dropdownId = 'dropdown-' + log.id;
-  return h('div', [
-    h('a.dropdown-button.waves-effect.waves-teal.btn-flat', 
-      {href:'#', attributes:{'data-activates':dropdownId}}, 
-      'ADD TAG'),
+function labelInput (log, tags, idPrefix) {
+  var dropdownId = (idPrefix || '') + '-dropdown-' + log.id;
+  return h('span', [
+    h('a.dropdown-button.teal.lighten-4.z-depth-1', 
+      {
+        'hook-init': new initDropdownHook(),
+        attributes:{'data-activates':dropdownId},
+        style:{padding:'5px 10px', margin:'2px'}
+      },
+      '+'),
     h('ul#' + dropdownId + '.dropdown-content', _.map(tags, (tag) => 
       h('li', [
         h('a#create-tagging', {attributes:{'data-log-id':log.id, 'data-tag-id':tag.id}}, tag.name)
@@ -137,26 +141,27 @@ function labelInput (log, tags) {
   ]);
 }
 
-function initDropdown () {
-  $('.dropdown-button').dropdown({
-      inDuration: 300,
-      outDuration: 225,
-      constrain_width: false,
-      gutter: 0, // Spacing from edge
-      belowOrigin: false // Displays dropdown below the button
-    }
-  );
+function initDropdownHook () {}
+initDropdownHook.prototype.hook = (node, name, prevValue) => {
+  initDropdown(node);
+};
+
+function initDropdown (node) {
+  $(node).dropdown({
+    inDuration: 300,
+    outDuration: 225,
+    constrain_width: false,
+    gutter: 0, // Spacing from edge
+    belowOrigin: false // Displays dropdown below the button
+  });
 }
 
 //// INPUT
 
 function input (DOM) {
   return {
-      // logout$: parseLogout(DOM),
-      // createTag$: parseCreateTag(DOM),
-      // changeState$: parseChangeState(DOM),
-      // createTagging$: parseCreateTagging(DOM),
-      // deleteTagging$: parseDeleteTagging(DOM)
+    createTagging$: parseCreateTagging(DOM),
+    removeTagging$: parseRemoveTagging(DOM)
   };
 }
 
@@ -170,7 +175,7 @@ function parseCreateTagging (DOM) {
   });
 }
 
-function parseDeleteTagging (DOM) {
+function parseRemoveTagging (DOM) {
   return DOM.get('#delete-tagging', 'click').map(e => {
     let el = $(e.target);
     return {
