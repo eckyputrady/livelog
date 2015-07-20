@@ -51,7 +51,7 @@ function logGroups ({logsLoaded$}) {
     return _.chain(logs.succ)
             .map(x => { 
               return {
-                date: moment(x.date).format('MMM DD'),
+                date: moment(x.date).format('MMMM DD'),
                 logId: x.id
               }; 
             })
@@ -76,7 +76,7 @@ function logs ({logsLoaded$}) {
 }
 
 function tags ({tagsLoaded$}) {
-  return tagsLoaded$.do(trace('tagsLoaded')).map(tags => {
+  return tagsLoaded$.map(tags => {
     return _.chain(tags.succ)
             .map(tag => [tag.id, tag])
             .zipObject()

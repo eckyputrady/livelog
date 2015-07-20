@@ -36,8 +36,21 @@ function logGroupView (model, logs, date) {
 }
 
 function pastLogsView (model, logs) {
-  return logs.length <= 0 ? [] : h('ul.collapsible.z-depth-1', {attributes:{'data-collabsible':'accordion'}}, _.map(logs, _.curry(logItemView)(model)));
+  return  logs.length <= 0 ? [] : 
+          h('ul.collapsible.z-depth-1', 
+            {
+              'hook-init': new initCollapsibleHook(),
+              attributes:{'data-collabsible':'accordion'}
+            },
+            _.map(logs, _.curry(logItemView)(model)));
 }
+
+function initCollapsibleHook () {}
+initCollapsibleHook.prototype.hook = (node, name, prevValue) => {
+  if (!prevValue) {
+    setTimeout(() => $(node).collapsible(), 200);
+  }
+};
 
 function logItemView (model, {logId}) {
   let log = model.logs[logId];
@@ -48,7 +61,7 @@ function logItemView (model, {logId}) {
       h('span.right-align', {style:{float:'right'}}, moment(log.createdAt).format('h:mm A'))
     ]),
     h('div.collapsible-body', [
-      // h('div', {style:{'margin':'8px','margin-left':'18px'}}, labels(model, log))
+      h('div', {style:{'margin':'8px','margin-left':'18px'}}, labels(model, log))
     ]),
   ]);
 }
@@ -71,7 +84,7 @@ function buildLogVM (model, logId) {
   return log ? {
     createdAt : moment(log.createdAt).format('h:mm A'),
     message   : log.message,
-    duration  : moment.utc(new Date() - new Date(log.createdAt)).format('H:mm:ss')
+    duration  : moment.utc(model.time - new Date(log.createdAt)).format('H:mm:ss')
   } : {
     createdAt : null,
     message   : 'You haven\'t logged in anything',
@@ -92,32 +105,33 @@ function currentLogView (model) {
   ]);
 }
 
-function label (log, tagL) {
-  let {id,name} = tagL.sVal || {id:null,name:''};
+function labels (model, log) {
+  if (!log) { return []; }
+
+  let taggings = model.taggings[log.id] || [];
+  let tags = _.filter(_.map(taggings, (tagId) => model.tags[tagId]));
+  return [
+    _.map(tags, _.curry(label)(log)),
+    labelInput(log, model.tags)
+  ];
+}
+
+function label (log, tag) {
+  let {id,name} = tag || {id:null,name:''};
   return h('span.z-depth-1', {style:{display:'inline-block', padding:'3px', margin:'2px'}}, [
     name, '   ', h('a#delete-tagging', {attributes:{'data-tag-id':id, 'data-log-id':log.id}}, '\u2717')
   ]);
 }
 
-function labels (model, log) {
-  if (!log) { return []; }
-
-  let taggingsL = model.logTags[log.id];
-  let taggings = taggingsL ? taggingsL.sVal : [];
-  let tags = _.filter(_.map(taggings, (tagId) => model.tags.sVal[tagId]));
-  return [
-    _.map(tags, _.curry(label)(log)),
-    labelInput(log, model.tags.sVal)
-  ];
-}
-
-function labelInput (log, tagLs) {
+function labelInput (log, tags) {
   var dropdownId = 'dropdown-' + log.id;
-  return h('span', [
-    h('a.dropdown-button.teal.lighten-4.z-depth-1', {href:'#', attributes:{'data-activates':dropdownId}, style:{padding:'5px 10px', margin:'2px'}}, '+'),
-    h('ul#' + dropdownId + '.dropdown-content', _.map(tagLs, (tag) => 
+  return h('div', [
+    h('a.dropdown-button.waves-effect.waves-teal.btn-flat', 
+      {href:'#', attributes:{'data-activates':dropdownId}}, 
+      'ADD TAG'),
+    h('ul#' + dropdownId + '.dropdown-content', _.map(tags, (tag) => 
       h('li', [
-        h('a#create-tagging', {attributes:{'data-log-id':log.id, 'data-tag-id':tag.sVal.id}}, tag.sVal.name)
+        h('a#create-tagging', {attributes:{'data-log-id':log.id, 'data-tag-id':tag.id}}, tag.name)
       ])
     ))
   ]);
