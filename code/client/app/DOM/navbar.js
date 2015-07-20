@@ -39,11 +39,16 @@ initSidenavHook.prototype.hook = (node, name, prevVal) => {
   }
 }
 
+function hideSidenav () {
+  $('a.button-collapse').sideNav('hide');
+}
+
 //// INPUT
 
 function input(DOM) {
   return {
-    logout$: parseLogout(DOM),
+    logout$: parseLogout(DOM).do(hideSidenav),
+    setState$: parseChangeState(DOM).do(hideSidenav)
   };
 }
 
@@ -53,9 +58,5 @@ function parseLogout (DOM) {
 
 function parseChangeState (DOM) {
   return DOM.get('a#change-state', 'click')
-    .map(e => {
-      return {
-        nextstate: $(e.target).data('nextstate')
-      };
-    });
+    .map(e => $(e.target).data('nextstate'));
 }

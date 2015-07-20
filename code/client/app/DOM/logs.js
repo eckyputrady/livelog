@@ -2,7 +2,7 @@ import {h} from '@cycle/web';
 import moment from 'moment';
 import _ from 'lodash';
 import {Rx} from '@cycle/core';
-import {navbar, loggedInContainer} from './common.js'
+import {loggedInContainer, circleLoader} from './common.js'
 
 module.exports = {
   input, output
@@ -22,16 +22,6 @@ function logsView (model) {
       h('div.center', circleLoader(model.logs.isLoading))
     ])
   ];
-}
-
-function circleLoader (isActive, size) {
-  let active = isActive ? '.active' : '';
-  let sizeClass = '.' + size;
-  return h('div.preloader-wrapper' + active + sizeClass, h('div.spinner-layer.spinner-blue-only', [
-    h('div.circle-clipper.left', h('div.circle')),
-    h('div.gap-patch', h('div.circle')),
-    h('div.circle-clipper.right', h('div.circle'))
-  ]));
 }
 
 function logGroupsView (model) {

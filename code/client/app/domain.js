@@ -8,8 +8,8 @@ module.exports = {
 };
 
 function update (inputs) {
-  return {
-    state$: Rx.Observable.just('Logs'),
+  return _.mapValues({
+    state$: state(inputs),
     logGroups$: logGroups(inputs),
     logs$: logs(inputs),
     tags$: tags(inputs),
@@ -17,7 +17,11 @@ function update (inputs) {
     curUser$: curUser(inputs),
     isUserLoading$: isUserLoading(inputs),
     curLogId$: curLogId(inputs)
-  };
+  }, x => x.shareReplay(1));
+}
+
+function state ({setState$}) {
+  return setState$.startWith('Logs');
 }
 
 function curLogId ({logsLoaded$}) {

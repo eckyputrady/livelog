@@ -10,6 +10,7 @@ import {Rx} from '@cycle/core';
 import {trace} from '../util.js';
 import login from './login.js';
 import logs from './logs.js';
+import tags from './tags.js';
 import modals from './modals.js';
 import navbar from './navbar.js';
 
@@ -29,6 +30,7 @@ function input (DOM) {
   let inputs = [
     login.input(DOM),
     logs.input(DOM),
+    tags.input(DOM),
     modals.input(DOM),
     navbar.input(DOM)
   ];
@@ -97,32 +99,5 @@ function snapModel (time$, model) {
 function render (model) {
   return  !model.user ? login.output(model) : 
           model.state === 'Logs' ? logs.output(model) :
-          h('div', 'asdasds');
-}
-
-// TAGS
-
-function tagsView (model) {
-  return [
-    h('div.row', h('div.col.s12', h('h3', 'Tags'))),
-    h('div', [
-      tagsListing(model),
-      h('div.center', circleLoader(model.tags.isLoading))
-    ])
-  ];
-}
-
-function tagsListing (model) {
-  return h('ul.collection', [
-    _.map(model.tags.sVal, tagItem)
-  ]);
-}
-
-function tagItem (tag) {
-  return h('li.collection-item', [
-    h('div', [
-      tag.sVal.name,
-      h('a.secondary-content', h('i.material-icons', 'delete'))
-    ])
-  ]);
+          tags.output(model);
 }
