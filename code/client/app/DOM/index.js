@@ -13,6 +13,7 @@ import logs from './logs.js';
 import tags from './tags.js';
 import modals from './modals.js';
 import navbar from './navbar.js';
+import toast from './toasts.js';
 
 module.exports = {
   input, output, driver
@@ -41,29 +42,8 @@ function input (DOM) {
 //// OUTPUT
 
 function output (model, inputs) {
-  showToast$(model, inputs);
+  toast.output(model, inputs);
   return render$(model, inputs);
-}
-
-function showToast$ (model, inputs) {
-  let errors$ = Rx.Observable.merge([
-      inputs.userCreated$,
-      inputs.sessionCreated$,
-      inputs.logsLoaded$,
-      inputs.logAdded$
-    ])
-    .filter(e => e.fail)
-    .map(e => e.fail.message);
-
-  let userCreatedMsg$ = inputs.userCreated$.filter(x => x.succ).map((x) => `'${x.request.send.name}' is registered successfully!`);
-  let sessionCreatedMsg$ = inputs.sessionCreated$.filter(x => x.succ).map((x) => `Hi, ${x.request.send.name}!`);
-
-  return Rx.Observable.merge([
-      errors$,
-      userCreatedMsg$,
-      sessionCreatedMsg$
-    ])  
-    .subscribe((e) => Materialize.toast(e, 3000));
 }
 
 function render$ (model, inputs) {

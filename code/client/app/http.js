@@ -20,7 +20,7 @@ function input (HTTP$$) {
     logAdded$: commonParse(6, http$$),
     // logRemoved$:
     logsLoaded$: commonParse(1, http$$),
-    // tagAdded$:
+    tagAdded$: commonParse(8, http$$),
     // tagRemoved$:
     // tagsLoaded$:
     // taggingAdded$:
@@ -53,6 +53,7 @@ function output (model, inputs) {
     loadLogs(model, inputs),
     createLog(model, inputs),
     loadTags(model, inputs),
+    createTag(model, inputs),
     createUser(model, inputs),
     createSession(model, inputs),
     getSession(model, inputs),
@@ -93,6 +94,17 @@ function loadTags ({state$}) {
       method: 'GET',
       url: '/tags',
     };
+  });
+}
+
+function createTag (model, {createTag$}) {
+  return createTag$.map(data => {
+    return {
+      __type: 8,
+      method: 'POST',
+      url: '/tags',
+      send: data
+    }
   });
 }
 

@@ -41,7 +41,6 @@ function isUserLoading ({register$, userCreated$, login$, sessionCreated$}) {
       userCreated$.map(() => -1),
       sessionCreated$.map(() => -1),
     ])
-    .do()
     .scan(0, (a,b) => a + b)
     .startWith(0)
     .map(a => a > 0);

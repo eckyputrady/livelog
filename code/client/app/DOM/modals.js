@@ -76,7 +76,8 @@ initModalHook.prototype.hook = (node, propname, prevVal) => {
 function input (DOM) {
   return {
     createLog$: parseCreateLog(DOM),
-  }
+    createTag$: parseCreateTag(DOM)
+  };
 }
 
 function parseCreateLog (DOM) {
