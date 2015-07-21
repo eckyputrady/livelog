@@ -1,4 +1,4 @@
-# LiveLog
+# LiveLog - [Live Demo](http://128.199.156.254/)
 
 ## Overview
 
@@ -9,6 +9,10 @@ This is also a project for me to experiment with new technologies:
 1. [CycleJS](http://cycle.js.org/), [virtual-dom](https://github.com/Matt-Esch/virtual-dom), and [MaterializeCSS](http://materializecss.com/) - for the client side
 2. Haskell & [Scotty](https://hackage.haskell.org/package/scotty) - for the backend side
 3. Docker for Infrastructure as Code
+
+[!Login](screenshots/0.png)
+
+[!Logs](screenshots/1.png)
 
 ## Setup
 
