@@ -39,20 +39,17 @@ getSession = do
     Nothing -> raise $ Unauthorized "Session unknown"
     Just x  -> return x
 
-requireUser :: ActM UserId
-requireUser = do
+getUserId :: ActM UserId
+getUserId = do
   (sessionLookup, _) <- getSession
   maybeUId <- liftIO $ sessionLookup "u"
   case maybeUId of
-    Nothing -> raise $ Unauthorized "maybeUId is nothing"
+    Nothing -> raise $ Unauthorized "You are not logged in"
     Just v -> case decode v of
-      Left _ -> raise $ Unauthorized "Format error"
+      Left _ -> raise $ Unauthorized "Corrupted cookies"
       Right decoded -> do
         let k = toSqlKey decoded
         mUser <- withDB $ DB.get (k :: UserId)
         case mUser of
           Nothing -> raise $ Unauthorized "Unknown user"
           Just user  -> return k
-
-getUserId :: ActM UserId
-getUserId = requireUser
