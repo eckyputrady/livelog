@@ -22,7 +22,7 @@ import qualified Data.Vault.Lazy                   as Vault
 import           Network.Wai.Session               (Session, SessionStore, withSession)
 import           Network.Wai.Session.ClientSession (clientsessionStore)
 import           Web.ClientSession                 (getDefaultKey)
-import           Network.Wai.Middleware.Static     (staticPolicy, noDots, (>->), addBase)
+import           Network.Wai.Middleware.Static     (initCaching, CachingStrategy(..), staticPolicy', noDots, (>->), addBase)
 
 import           Controllers.Common
 import qualified Controllers.Error                 as CError
@@ -76,5 +76,7 @@ run runner c = do
       return $ withSession sstore "session" def (vaultKey c)
 
     staticMW :: Config -> IO Middleware
-    staticMW c = return $ staticPolicy (noDots >-> addBase (staticPath c)) 
+    staticMW c = do
+      caching <- initCaching PublicStaticCaching
+      return $ staticPolicy' caching (noDots >-> addBase (staticPath c)) 
 

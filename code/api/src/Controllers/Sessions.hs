@@ -39,8 +39,8 @@ getOne = do
 
 save :: ActM ()
 save = do
-  d <- jsonDataE
-  user <- withDB $ DB.getByValue (d :: User)
+  (d :: User) <- jsonDataE
+  user <- withDB $ getUserItem UserName (userName d) UserPass (userPass d)
   case user of
     Nothing ->
       raise $ BadRequest "user not found"

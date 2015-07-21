@@ -14,7 +14,7 @@ import           Util
 
 spec =
   describe "Sessions" $ do
-    it "creating new session with invalide input should fail" $ do
+    it "creating new session with invalid input should fail" $ do
       post "/sessions" [json|{invalid:"input"}|] `shouldRespondWith` 400
 
     it "creating new session with valid credential should succeed" $ do
@@ -23,6 +23,10 @@ spec =
 
     it "creating new session with invalid credential should fail" $ do
       loginTestUser `shouldRespondWith` 400
+
+    it "creating new session should has the same case" $ pendingWith "MySQL's string match in case-insensitive manner"
+      -- createTestUser `shouldRespondWith` 201
+      -- loginUser "ECKY" `shouldRespondWith` 400
 
     it "creating new session twice should succeed" $ do
       createTestUser `shouldRespondWith` 201
