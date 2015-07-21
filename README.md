@@ -2,9 +2,13 @@
 
 ## Overview
 
-LiveLog helps you log your activities throughout the day. It is a much simpler version of [toggl](https://toggl.com/).
+LiveLog helps you improve your productivity. You log your activities and tag them appropriately for you to review overall at the end of the day. It is a much simpler version of [toggl](https://toggl.com/) in which you don't start & stop the timer, you will always be logging. Time. is. precious.
 
-And is actually a project for me to experiment with Haskell & Docker.
+This is also a project for me to experiment with new technologies:
+
+1. [CycleJS](http://cycle.js.org/), [virtual-dom](https://github.com/Matt-Esch/virtual-dom), and [MaterializeCSS](http://materializecss.com/) - for the client side
+2. Haskell & [Scotty](https://hackage.haskell.org/package/scotty) - for the backend side
+3. Docker for Infrastructure as Code
 
 ## Setup
 
@@ -12,7 +16,6 @@ And is actually a project for me to experiment with Haskell & Docker.
 2. For development:
     1. `./llg dev up`
     2. `./llg dev enter`
-    2. see `code/client/README.md` && `code/api/README.md` to see how to develop client & API
     3. `./llg dev down` when done
 3. For building & packaging (Continuous Integration):
 	1. `./llg build up`
