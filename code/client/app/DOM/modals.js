@@ -1,8 +1,5 @@
 import {h} from '@cycle/web';
-import moment from 'moment';
-import _ from 'lodash';
 import {Rx} from '@cycle/core';
-import {navbar} from './common.js'
 
 module.exports = {
   input, fab, modals
@@ -67,7 +64,7 @@ initModalHook.prototype.hook = (node, propname, prevVal) => {
   if (!prevVal) {
     $(node).leanModal();
   }
-}
+};
 
 //// INPUT
 

@@ -1,8 +1,5 @@
 import {h} from '@cycle/web';
-import moment from 'moment';
-import _ from 'lodash';
-import {Rx} from '@cycle/core';
-import navbar from './navbar.js'
+import navbar from './navbar.js';
 
 module.exports = {
   input, output

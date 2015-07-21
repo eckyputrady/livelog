@@ -3,11 +3,9 @@ require('hammerjs');
 require('npm/materialize-css/bin/materialize.css');
 require('npm/materialize-css/bin/materialize.js');
 
-import {h, makeDOMDriver} from '@cycle/web';
-import moment from 'moment';
+import {makeDOMDriver} from '@cycle/web';
 import _ from 'lodash';
 import {Rx} from '@cycle/core';
-import {trace} from '../util.js';
 import login from './login.js';
 import logs from './logs.js';
 import tags from './tags.js';
@@ -43,10 +41,10 @@ function input (DOM) {
 
 function output (model, inputs) {
   toast.output(model, inputs);
-  return render$(model, inputs);
+  return render$(model);
 }
 
-function render$ (model, inputs) {
+function render$ (model) {
   let curTime$ = timeEvery1Sec();
   let model$ = snapModel(curTime$, model);
   let sampledModel$ = model$.sample(1000 / 30); // draw every 30FPS & IF there is any change
@@ -54,7 +52,7 @@ function render$ (model, inputs) {
 }
 
 function timeEvery1Sec () {
-  return Rx.Observable.interval(1000).startWith(0).map(_ => new Date());
+  return Rx.Observable.interval(1000).startWith(0).map(() => new Date());
 }
 
 function snapModel (time$, model) {

@@ -1,7 +1,7 @@
 import {Rx} from '@cycle/core';
 import _ from 'lodash';
 import moment from 'moment';
-import {trace} from './util.js'
+import {trace} from './util.js';
 
 module.exports = {
   update
@@ -29,7 +29,7 @@ function curLogId ({logsLoaded$}) {
 }
 
 function curUser ({sessionLoaded$, sessionRemoved$, logout$}) {
-  let loggedIn$ = sessionLoaded$.filter(x => !x.fail).map(x => x.succ.name)
+  let loggedIn$ = sessionLoaded$.filter(x => !x.fail).map(x => x.succ.name);
   let loggedOut$ = Rx.Observable.merge([sessionRemoved$, logout$]).map(() => null);
   return Rx.Observable.merge([loggedIn$, loggedOut$]).startWith(null);
 }

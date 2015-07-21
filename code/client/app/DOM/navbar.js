@@ -2,7 +2,7 @@ import {h} from '@cycle/web';
 
 module.exports = {
   input, output
-}
+};
 
 //// OUTPUT
 
@@ -42,7 +42,7 @@ initSidenavHook.prototype.hook = (node, name, prevVal) => {
   if (!prevVal) { 
     setTimeout(() => $(node).sideNav(), 1000);
   }
-}
+};
 
 function hideSidenav () {
   $('a.button-collapse').sideNav('hide');

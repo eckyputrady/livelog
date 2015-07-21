@@ -1,6 +1,5 @@
 import {makeHTTPDriver} from '@cycle/http';
 import {Rx} from '@cycle/core';
-import {trace} from './util.js';
 
 module.exports = {
   driver, input, output
@@ -43,7 +42,7 @@ function commonParse (type, http$$) {
                   x.request = x$.request;
                   return x;
                 });
-    })
+    });
 }
 
 //// OUTPUT
@@ -87,7 +86,7 @@ function createLog (model, {createLog$}) {
       method: 'POST',
       url: '/logs',
       send: data
-    }
+    };
   });
 }
 
@@ -139,7 +138,7 @@ function createTagging (model, {createTagging$}) {
       method: 'POST',
       url: '/logs/' + data.logId + '/tags/' + data.tagId,
       send: data
-    }
+    };
   });
 }
 
@@ -150,7 +149,7 @@ function removeTagging (model, {removeTagging$}) {
       method: 'DEL',
       url: '/logs/' + data.logId + '/tags/' + data.tagId,
       send: data
-    }
+    };
   });
 }
 
@@ -178,7 +177,7 @@ function createSession (model, {userCreated$, login$}) {
 }
 
 function getSession ({curUser$}, {sessionCreated$}) {
-  let afterLogin$ = sessionCreated$.filter(e => !e.fail)
+  let afterLogin$ = sessionCreated$.filter(e => !e.fail);
   let nullUser$ = curUser$.filter(e => !e).take(1);
   return Rx.Observable.merge([afterLogin$, nullUser$]).map(() => {
     return {

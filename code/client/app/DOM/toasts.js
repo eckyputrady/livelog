@@ -1,9 +1,8 @@
-import {h} from '@cycle/web';
-import {trace} from '../util.js';
+import {Rx} from '@cycle/core';
 
 module.exports = {
   output
-}
+};
 
 ////
 
@@ -30,7 +29,7 @@ function errorMsg (inputs) {
 }
 
 function tagCreatedMsg (inputs) {
-  return filterSucc(inputs.tagAdded$).map(x => `'${x.request.send.name}' is created!`)
+  return filterSucc(inputs.tagAdded$).map(x => `'${x.request.send.name}' is created!`);
 }
 
 function userCreatedMsg (inputs) {

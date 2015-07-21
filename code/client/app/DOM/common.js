@@ -5,7 +5,7 @@ import navbar from './navbar.js';
 module.exports = {
   loggedInContainer,
   circleLoader
-}
+};
 
 ////
 

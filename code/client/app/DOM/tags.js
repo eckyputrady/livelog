@@ -1,8 +1,6 @@
 import {h} from '@cycle/web';
-import moment from 'moment';
 import _ from 'lodash';
-import {Rx} from '@cycle/core';
-import {loggedInContainer, circleLoader} from './common.js'
+import {loggedInContainer} from './common.js';
 
 module.exports = {
   input, output
@@ -41,12 +39,6 @@ function tagItem (tag) {
 
 //// INPUT
 
-function input (DOM) {
-  return {
-      // logout$: parseLogout(DOM),
-      // createTag$: parseCreateTag(DOM),
-      // changeState$: parseChangeState(DOM),
-      // createTagging$: parseCreateTagging(DOM),
-      // deleteTagging$: parseDeleteTagging(DOM)
-  };
+function input () {
+  return {};
 }
