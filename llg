@@ -34,6 +34,7 @@ case "$1 $2" in
                   ;;
 
   "deploy up")    cd infra/env-deploy
+                  mkdir -p db
                   docker-compose build
                   docker-compose up -d
                   ;;
