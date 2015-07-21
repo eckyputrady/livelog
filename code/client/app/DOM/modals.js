@@ -12,10 +12,10 @@ module.exports = {
 
 function fab () {
   return h('div.fixed-action-btn', {style:{bottom:'45px',right:'24px'}}, [
-    h('a.btn-floating.btn-large.red', h('i.large.material-icons', 'add')),
+    h('a.btn-floating.btn-large.teal', h('i.large.material-icons', 'add')),
     h('ul', [
-      h('li', h('a.modal-trigger.btn-floating.red', {'modal-hook': new initModalHook(), href:'#log-dialog'}, h('i.small.material-icons', 'done'))),
-      h('li', h('a.modal-trigger.btn-floating.red', {'modal-hook': new initModalHook(), href:'#tag-dialog'}, h('i.small.material-icons', 'label')))
+      h('li', h('a.modal-trigger.btn-floating.teal', {'modal-hook': new initModalHook(), href:'#log-dialog'}, h('i.small.material-icons', 'done'))),
+      h('li', h('a.modal-trigger.btn-floating.teal', {'modal-hook': new initModalHook(), href:'#tag-dialog'}, h('i.small.material-icons', 'label')))
     ])
   ]);
 }
@@ -43,8 +43,8 @@ function logDialogModal () {
       ])
     ])
   ], [
-    h('a#create-log.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Create'),
-    h('a.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Cancel'),
+    h('a#create-log.modal-action.modal-close.waves-effect.waves-grey.btn-flat.teal-text', 'Create'),
+    h('a.modal-action.modal-close.waves-effect.waves-grey.btn-flat', 'Cancel'),
   ]);
 }
 
@@ -57,8 +57,8 @@ function tagDialogModal () {
       ])
     ])
   ], [
-    h('a#create-tag.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Create'),
-    h('a.modal-action.modal-close.waves-effect.waves-green.btn-flat', 'Cancel'),
+    h('a#create-tag.modal-action.modal-close.waves-effect.waves-grey.btn-flat.teal-text', 'Create'),
+    h('a.modal-action.modal-close.waves-effect.waves-grey.btn-flat', 'Cancel'),
   ]);
 }
 

@@ -31,7 +31,7 @@ function loginForm (formId, model) {
       h('label', 'Password')
     ])),
     h('div.row', [
-      h('div.col.s6', h('a#register.col.s12.btn-flat.waves-effect.waves-teal.' + isDisabled, {disabled:isDisabled}, 'Register')),
+      h('div.col.s6', h('a#register.col.s12.btn-flat.waves-effect.waves-grey.' + isDisabled, {disabled:isDisabled}, 'Register')),
       h('div.col.s6', h('a#login.col.s12.btn.waves-effect.waves-light.' + isDisabled, {disabled:isDisabled}, 'Login'))
     ])
   ]));

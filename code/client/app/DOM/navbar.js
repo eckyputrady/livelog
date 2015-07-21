@@ -7,7 +7,7 @@ module.exports = {
 //// OUTPUT
 
 function output (withSideNav) {
-  return h('nav', [
+  return h('nav.light-green', [
     h('div.container', [
       sideNav(withSideNav),
       h('div.nav-wrapper', [

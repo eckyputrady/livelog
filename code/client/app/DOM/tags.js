@@ -34,7 +34,7 @@ function tagItem (tag) {
   return h('li.collection-item', [
     h('div', [
       tag.name,
-      h('a.secondary-content', h('i.material-icons', 'delete'))
+      // h('a.secondary-content', h('i.material-icons', 'delete'))
     ])
   ]);
 }
