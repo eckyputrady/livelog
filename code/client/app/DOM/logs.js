@@ -96,8 +96,8 @@ function buildLogVM (model, logId) {
 function currentLogView (model) {
   let logVM = buildLogVM(model, model.curLogId);
   return h('div.row', [
-    h('h1.col.s12.center', logVM.duration),
     h('h4.col.s12.center', logVM.message),
+    h('h1.col.s12.center', {style:{'font-weight':'200', 'font-size': '6rem'}}, logVM.duration),
     h('div.col.s12.center', labels(model, model.logs[model.curLogId], 'main')),
     h('p.col.s12.center', logVM.createdAt ? 
       ['since ', h('b', logVM.createdAt)] :
