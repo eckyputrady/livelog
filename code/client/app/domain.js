@@ -10,8 +10,8 @@ module.exports = {
 function update (inputs) {
   return _.mapValues({
     state$: state(inputs),
-    logGroups$: logGroups(inputs),
-    logs$: logs(inputs),
+    logGroups$: logGroups(inputs).do(trace('logGroups')),
+    logs$: logs(inputs).do(trace('logs')),
     tags$: tags(inputs),
     taggings$: taggings(inputs),
     curUser$: curUser(inputs),
@@ -51,7 +51,8 @@ function logGroups ({logsLoaded$}) {
     return _.chain(logs.succ)
             .map(x => { 
               return {
-                date: moment(x.date).format('MMMM DD'),
+                rawDate: x.createdAt,
+                date: moment.utc(x.createdAt).format('MMMM DD'),
                 logId: x.id
               }; 
             })
