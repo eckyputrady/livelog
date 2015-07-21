@@ -91,13 +91,11 @@ function createLog (model, {createLog$}) {
 }
 
 function loadTags ({curUser$, state$}, {tagAdded$}) {
-  let distinctState$ = state$.distinctUntilChanged();
-  let distinctUser$ = curUser$.distinctUntilChanged(); 
-  let trigger$ = Rx.Observable.combineLatest(distinctState$, distinctUser$, (state, user) => [state, user])
-    .filter(([state, user]) => state === 'Tags' && !!user);
+  let distinctState$ = state$.distinctUntilChanged().filter(e => e === 'Tags');
+  let distinctUser$ = curUser$.distinctUntilChanged().filter(e => !!e); 
   let tagAddedSucc$ = tagAdded$.filter(x => !x.fail);
 
-  return Rx.Observable.merge([trigger$, tagAddedSucc$]).debounce(200).map(() => {
+  return Rx.Observable.merge([distinctState$, distinctUser$, tagAddedSucc$]).debounce(200).map(() => {
     return {
       __type: 2,
       method: 'GET',
