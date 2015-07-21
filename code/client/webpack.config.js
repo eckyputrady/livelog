@@ -35,7 +35,7 @@ var config = {
           loader: 'url?limit=10000&mimetype=application/font-woff' 
         },
         { 
-          test: /\.(eot|svg|ttf)$/,    
+          test: /\.(eot|svg|ttf|jpg)$/,    
           loader: 'file' 
         },
         {
