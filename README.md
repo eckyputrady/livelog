@@ -10,9 +10,9 @@ This is also a project for me to experiment with new technologies:
 2. Haskell & [Scotty](https://hackage.haskell.org/package/scotty) - for the backend side
 3. Docker for Infrastructure as Code
 
-[!Login](screenshots/0.png)
+![Login](screenshots/0.png)
 
-[!Logs](screenshots/1.png)
+![Logs](screenshots/1.png)
 
 ## Setup
 
