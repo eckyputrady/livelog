@@ -65,10 +65,13 @@ function output (model, inputs) {
 }
 
 function loadLogs ({curUser$, state$}, {logAdded$}) {
-  let logsState$ = state$.distinctUntilChanged().filter(e => e === 'Logs');
-  let nonNullUser$ = curUser$.distinctUntilChanged().filter(e => !!e);
+  let distinctState$ = state$.distinctUntilChanged();
+  let distinctUser$ = curUser$.distinctUntilChanged();
+  let trigger$ = Rx.Observable.combineLatest(distinctState$, distinctUser$, (state, user) => [state, user])
+    .filter(([state, user]) => state === 'Logs' && !!user);
+  let logAddedSucc$ = logAdded$.filter(x => !x.fail);
 
-  return Rx.Observable.merge([nonNullUser$, logsState$, logAdded$]).debounce(200).map(() => {
+  return Rx.Observable.merge([trigger$, logAddedSucc$]).debounce(200).map(() => {
     return {
       __type: 1,
       method: 'GET',
@@ -89,10 +92,13 @@ function createLog (model, {createLog$}) {
 }
 
 function loadTags ({curUser$, state$}, {tagAdded$}) {
-  let nonNullUser$ = curUser$.distinctUntilChanged().filter(e => !!e);
-  let tagsState$ = state$.distinctUntilChanged().filter(e => e === 'Tags');
+  let distinctState$ = state$.distinctUntilChanged();
+  let distinctUser$ = curUser$.distinctUntilChanged(); 
+  let trigger$ = Rx.Observable.combineLatest(distinctState$, distinctUser$, (state, user) => [state, user])
+    .filter(([state, user]) => state === 'Tags' && !!user);
   let tagAddedSucc$ = tagAdded$.filter(x => !x.fail);
-  return Rx.Observable.merge([nonNullUser$, tagsState$, tagAddedSucc$]).map(() => {
+
+  return Rx.Observable.merge([trigger$, tagAddedSucc$]).debounce(200).map(() => {
     return {
       __type: 2,
       method: 'GET',
@@ -173,7 +179,7 @@ function createSession (model, {userCreated$, login$}) {
 
 function getSession ({curUser$}, {sessionCreated$}) {
   let afterLogin$ = sessionCreated$.filter(e => !e.fail)
-  let nullUser$ = curUser$.filter(e => !e);
+  let nullUser$ = curUser$.filter(e => !e).take(1);
   return Rx.Observable.merge([afterLogin$, nullUser$]).map(() => {
     return {
       __type: 5,

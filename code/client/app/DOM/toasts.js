@@ -1,4 +1,5 @@
 import {h} from '@cycle/web';
+import {trace} from '../util.js';
 
 module.exports = {
   output
@@ -11,6 +12,7 @@ function output (model, inputs) {
       errorMsg(inputs),
       userCreatedMsg(inputs),
       sessionCreatedMsg(inputs),
+      sessionRemovedMsg(inputs),
       tagCreatedMsg(inputs)
     ])
     .subscribe(e => Materialize.toast(e, 3000));
@@ -36,9 +38,13 @@ function userCreatedMsg (inputs) {
 }
 
 function sessionCreatedMsg (inputs) {
-  return filterSucc(inputs.sessionCreated$).map((x) => `Hi, ${x.request.send.name}!`);
+  return filterSucc(inputs.sessionLoaded$).map((x) => `Hi, ${x.succ.name}!`);
+}
+
+function sessionRemovedMsg (inputs) {
+  return filterSucc(inputs.sessionRemoved$).map(() => 'Good bye!');
 }
 
 function filterSucc (obs) {
-  return obs.filter(x => x.succ);
+  return obs.filter(x => !x.fail);
 }
