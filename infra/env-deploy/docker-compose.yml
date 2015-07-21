@@ -1,6 +1,8 @@
 db:
   image: "mysql:5.7"
   env_file: env
+  volumes:
+  	- "./db:/var/lib/mysql"
 
 dev:
   image: ecky/livelog
