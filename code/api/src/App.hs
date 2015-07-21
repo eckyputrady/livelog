@@ -21,6 +21,7 @@ import           Data.Serialize                    (decode, encode)
 import qualified Data.Vault.Lazy                   as Vault
 import           Network.Wai.Session               (Session, SessionStore, withSession)
 import           Network.Wai.Session.ClientSession (clientsessionStore)
+import           Web.Cookie                        (setCookiePath)
 import           Web.ClientSession                 (getDefaultKey)
 import           Network.Wai.Middleware.Static     (initCaching, CachingStrategy(..), staticPolicy', noDots, (>->), addBase)
 
@@ -73,7 +74,7 @@ run runner c = do
     sessionMW :: Config -> IO Middleware
     sessionMW c = do
       sstore <- clientsessionStore <$> getDefaultKey
-      return $ withSession sstore "session" def (vaultKey c)
+      return $ withSession sstore "session" (def { setCookiePath = Just "/"}) (vaultKey c)
 
     staticMW :: Config -> IO Middleware
     staticMW c = do

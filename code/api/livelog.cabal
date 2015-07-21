@@ -43,6 +43,7 @@ library
                       ,data-default-class
                       ,wai-session
                       ,wai-session-clientsession
+                      ,cookie
                       ,vault
                       ,clientsession
                       ,wai
