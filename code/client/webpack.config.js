@@ -5,13 +5,18 @@ var webpack = require('webpack')
 var cleanPlugin = require('clean-webpack-plugin');
 var htmlWebpackPlugin = require('html-webpack-plugin')
 
+var isProd = false;
+process.argv.forEach(function(x) {
+  if (x === '-p') isProd = true;
+});
+
 // define Webpack configuration object to be exported
 var config = {
     context: __dirname + '/app',
     entry: './index.js',
     output: {
       path: __dirname + '/dist',
-      filename: 'bundle.js',
+      filename: 'bundle' + (isProd ? '.[hash]' : '') + '.js',
       hash: true
     },
     resolve: {
@@ -51,7 +56,8 @@ var config = {
         jQuery: 'jquery',
         'window.jQuery': 'jquery',
         Hammer: 'hammerjs'
-      })
+      }),
+      new webpack.ContextReplacementPlugin(/moment[\\\/]locale$/, /^\.\/(en)$/)
     ],
     devServer: {
       contentBase: __dirname + '/dist',
